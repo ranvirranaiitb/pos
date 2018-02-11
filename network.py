@@ -35,7 +35,7 @@ class Network(object):
             self.msg_arrivals[self.time + delay].append((node.id, msg))
 
 
-    def tick(self):
+    def tick(self, sml_stats = {}):
         """Simulates a tick of time.
 
         Each node deals with receiving messages of time t.
@@ -43,7 +43,7 @@ class Network(object):
         """
         if self.time in self.msg_arrivals:
             for node_index, msg in self.msg_arrivals[self.time]:
-                self.nodes[node_index].on_receive(msg)
+                self.nodes[node_index].on_receive(msg, sml_stats)
             del self.msg_arrivals[self.time]
         for n in self.nodes:
             n.tick(self.time)

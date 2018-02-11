@@ -77,7 +77,7 @@ class Validator(object):
             desc = self.get_checkpoint_parent(desc)
 
     # Called every round
-    def tick(self, time):
+    def tick(self, time, sml_stats = {}):
         # At time 0: validator 0
         # At time BLOCK_PROPOSAL_TIME: validator 1
         # .. At time NUM_VALIDATORS * BLOCK_PROPOSAL_TIME: validator 0
@@ -86,7 +86,7 @@ class Validator(object):
             new_block = Block(self.head, self.finalized_dynasties)
             self.network.broadcast(new_block)
             self.network.report_proposal(new_block.hash)
-            self.on_receive(new_block)  # immediately "receive" the new block (no network latency)
+            self.on_receive(new_block, sml_stats)  # immediately "receive" the new block (no network latency)
 
 class VoteValidator(Validator):
     """Add the vote messages + slashing conditions capability"""
@@ -269,7 +269,7 @@ class VoteValidator(Validator):
                 self.network.broadcast(vote)
                 assert self.processed[target_block.hash]
 
-    def accept_vote(self, vote):
+    def accept_vote(self, vote, sml_stats = {}):
         """Called on receiving a vote message.
         """
         # print('Node %d: got a vote' % self.id, source.view, prepare.view_source,
@@ -335,11 +335,16 @@ class VoteValidator(Validator):
         # is always the same right now)
         # If there are enough votes, process them
         if (self.vote_count[vote.source][vote.target] > (NUM_VALIDATORS * SUPER_MAJORITY)):
+            try:
+                sml_stats[vote.epoch_target - vote.epoch_source] += 1
+            except KeyError:
+                sml_stats[vote.epoch_target - vote.epoch_source ] = 1
+
             # Mark the target as justified
             self.justified.add(vote.target)
             if vote.target in self.justification_dependencies:
                 for d in self.justification_dependencies[vote.target]:
-                    self.on_receive(d)
+                    self.on_receive(d, sml_stats)
                 del self.justification_dependencies[vote.target]
 
             if vote.epoch_target > self.highest_justified_checkpoint.epoch:
@@ -353,18 +358,18 @@ class VoteValidator(Validator):
         return True
 
     # Called on processing any object
-    def on_receive(self, obj):
+    def on_receive(self, obj, sml_stats = {}):
         if obj.hash in self.processed:
             return False
         if isinstance(obj, Block):
             o = self.accept_block(obj)
         elif isinstance(obj, Vote):
-            o = self.accept_vote(obj)
+            o = self.accept_vote(obj, sml_stats)
         # If the object was successfully processed
         # (ie. not flagged as having unsatisfied dependencies)
         if o:
             self.processed[obj.hash] = obj
             if obj.hash in self.dependencies:
                 for d in self.dependencies[obj.hash]:
-                    self.on_receive(d)
+                    self.on_receive(d, sml_stats)
                 del self.dependencies[obj.hash]
