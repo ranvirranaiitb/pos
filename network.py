@@ -14,6 +14,8 @@ class Network(object):
         self.first_proposal_time = {}
         self.final_validator ={}
         self.final_time={}
+        self.first_finalized_time={}
+        self.final_quartiles={}
 
 
     def broadcast(self, msg):
@@ -60,4 +62,13 @@ class Network(object):
         self.final_validator[blockhash].append(val_id)
         if len(self.final_validator[blockhash])>=NUM_VALIDATORS//2:
             self.final_time[blockhash] = self.time
+        if blockhash not in self.final_quartiles:
+            self.final_quartiles[blockhash] = []
+            self.first_finalized_time[blockhash] = self.time
+
+        temp = NUM_VALIDATORS//4
+        if len(self.final_validator[blockhash])%temp == 0 :
+            self.final_quartiles[blockhash].append(self.time-self.first_finalized_time[blockhash])
+
+
 

@@ -65,6 +65,34 @@ def delay_throughput(network):
         throughput = BLOCK_PROPOSAL_TIME*EPOCH_SIZE*NUM_EPOCH  #max_time - min_time 
     return Edelay, E2delay, throughput, len(network.final_time)
 
+def finalization_quartiles(network):
+    sumquartiles = [0.0,0.0,0.0,0.0]
+    sumsquarequartiles = [0.0,0.0,0.0,0.0]
+    len_valid_sums = [0.0,0.0,0.0,0.0]
+
+    Equartiles = [0.0,0.0,0.0,0.0]
+    E2quartiles = [0.0,0.0,0.0,0.0]
+    stdquartiles = [0.0,0.0,0.0,0.0]
+
+    for blockhash in network.final_quartiles:
+        for i in range(4):
+            if len(network.final_quartiles[blockhash])>i:
+                sumquartiles[i] = sumquartiles[i] + network.final_quartiles[blockhash][i]
+                sumsquarequartiles[i] += network.final_quartiles[blockhash][i]**2
+                len_valid_sums[i] +=1
+    '''
+    for i in range(4):            
+        if len_valid_sums[i]>0:
+            Equartiles[i] = Equartiles[i]/len_valid_sums[i]
+            E2quartiles[i] = E2quartiles[i]/len_valid_sums[i]
+            stdquartiles[i] = E2quartiles[i] - Equartiles[i]**2
+            stdquartiles[i] = np.sqrt(stdquartiles[i])
+        else:
+            Equartiles[i] = None
+            stdquartiles[i] = None
+    '''
+    print(len_valid_sums)
+    return sumquartiles,sumsquarequartiles,len_valid_sums
 
 def main_chain_size(validator):
     """Computes the number of blocks in the main chain."""
@@ -152,6 +180,12 @@ def print_metrics_latency(latencies, num_tries, validator_set=VALIDATOR_IDS):
         throughputsum = 0.0
         squarethroughputsum = 0.0
         total_finalized = 0.0
+        num_finalized_tries = 0.0
+        finalization_achieved = True
+        Equartiles = [0.0,0.0,0.0,0.0]
+        E2quartiles = [0.0,0.0,0.0,0.0]
+        stdquartiles = [0.0,0.0,0.0,0.0]
+        len_valid_sums = [0.0,0.0,0.0,0.0]
 
         #fcsum = {}
         for i in range(num_tries):
@@ -183,20 +217,41 @@ def print_metrics_latency(latencies, num_tries, validator_set=VALIDATOR_IDS):
             Edelay,E2delay,throughput,num_finalized = delay_throughput(network)
             delaysum += Edelay*num_finalized
             squaredelaysum += E2delay*num_finalized
-            throughputsum +=throughput
-            squarethroughputsum += throughput**2
+            if num_finalized>0:
+                throughputsum +=throughput
+                num_finalized_tries = num_finalized_tries + 1
+                squarethroughputsum += throughput**2
             total_finalized += num_finalized
+
+            tempEquartiles,tempE2quartiles,templen_valid_sums = finalization_quartiles(network)
+            for i in range(4):
+                if templen_valid_sums[i]>0 :   
+                    Equartiles[i] += tempEquartiles[i]
+                    E2quartiles[i] += tempE2quartiles[i]
+                    len_valid_sums[i] += templen_valid_sums[i]
+
+
+
         if total_finalized > 0 :
             Edelay = delaysum/total_finalized
             E2delay = squaredelaysum/total_finalized
+            vardelay = E2delay - Edelay**2
+            Ethroughput = throughputsum/num_finalized_tries
+            E2throughput = squarethroughputsum/num_finalized_tries
+            varthroughput = E2throughput - Ethroughput**2    
         else:
-            Edelay = Edelay
-            E2delay = E2delay
-            print('No finalization Achieved')
-        vardelay = E2delay - Edelay**2
-        Ethroughput = throughputsum/num_tries
-        E2throughput = squarethroughputsum/num_tries
-        varthroughput = E2throughput - Ethroughput**2    
+            finalization_achieved = False
+            #print('No finalization Achieved')
+        
+        for i in range(4):            
+            if len_valid_sums[i]>0:
+                Equartiles[i] = Equartiles[i]/len_valid_sums[i]
+                E2quartiles[i] = E2quartiles[i]/len_valid_sums[i]
+                stdquartiles[i] = E2quartiles[i] - Equartiles[i]**2
+                stdquartiles[i] = np.sqrt(stdquartiles[i])
+            else:
+                Equartiles[i] = None
+                stdquartiles[i] = None
 
 
         Ejf = jfsum/len(validators)/num_tries
@@ -217,15 +272,20 @@ def print_metrics_latency(latencies, num_tries, validator_set=VALIDATOR_IDS):
 
 
         print('Latency: {}'.format(latency))
-        print('Justified: {}'.format([Ejf,varjf]))
-        print('Finalized: {}'.format([Eff,varff]))
-        print('Justified in forks: {}'.format([Ejff,varjff]))
-        print('Main chain size: {}'.format([Emc,varmc]))
+        #print('Justified: {}'.format([Ejf,varjf]))
+        #print('Finalized: {}'.format([Eff,varff]))
+        print('Justified in forks: {}'.format([Ejff,np.sqrt(varjff)]))
+        print('Main chain size: {}'.format([Emc,np.sqrt(varmc)]))
+        print('Main chain size:{}'.format([Emc/EPOCH_SIZE*NUM_EPOCH, np.sqrt(varmc)/EPOCH_SIZE*NUM_EPOCH ]))
         print('Blocks under main justified: {}'.format([Ebu,varbu]))
-        print('Delay:{}'.format([Edelay,vardelay]))
-        print('Throughput:{}'.format([Ethroughput,varthroughput]))
-        print('Main chain fraction: {}'.format(
-            mcsum / (len(validators) * num_tries * (EPOCH_SIZE * NUM_EPOCH + 1))))
+        print('finalization_quartiles:{}'.format([Equartiles,stdquartiles]))
+        if finalization_achieved :
+            print('Delay:{}'.format([Edelay,vardelay]))
+            print('Throughput:{}'.format([Ethroughput,varthroughput]))
+        else:
+            print('No finalization achieved')
+        #print('Main chain fraction: {}'.format(
+        #    mcsum / (len(validators) * num_tries * (EPOCH_SIZE * NUM_EPOCH + 1))))
         #for l in sorted(fcsum.keys()):
             #if l > 0:
                 #frac = float(fcsum[l]) / float(fcsum[0])
