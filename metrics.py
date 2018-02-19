@@ -9,6 +9,7 @@ from validator import VoteValidator
 from plot_graph import plot_node_blockchains
 
 
+
 def fraction_justified_and_finalized(validator):
     """Compute the fraction of justified and finalized checkpoints in the main chain.
 
@@ -276,7 +277,7 @@ def print_metrics_latency(latencies, num_tries, validator_set=VALIDATOR_IDS):
         #print('Finalized: {}'.format([Eff,varff]))
         print('Justified in forks: {}'.format([Ejff,np.sqrt(varjff)]))
         print('Main chain size: {}'.format([Emc,np.sqrt(varmc)]))
-        print('Main chain size:{}'.format([Emc/EPOCH_SIZE*NUM_EPOCH, np.sqrt(varmc)/EPOCH_SIZE*NUM_EPOCH ]))
+        print('Main chain size:{}'.format([Emc/EPOCH_SIZE/NUM_EPOCH, np.sqrt(varmc)/EPOCH_SIZE/NUM_EPOCH ]))
         print('Blocks under main justified: {}'.format([Ebu,varbu]))
         print('finalization_quartiles:{}'.format([Equartiles,stdquartiles]))
         if finalization_achieved :
