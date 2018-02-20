@@ -7,5 +7,5 @@ INITIAL_VALIDATORS = list(range(0, NUM_VALIDATORS))  # set of validators for roo
 BLOCK_PROPOSAL_TIME = 100  # adds a block every 100 ticks
 EPOCH_SIZE = 5  # checkpoint every 5 blocks
 AVG_LATENCY = 10  # average latency of the network (in number of ticks)
-NUM_EPOCH = 100
+NUM_EPOCH = 300
 SUPER_MAJORITY = 2/3
