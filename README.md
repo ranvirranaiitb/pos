@@ -10,6 +10,12 @@ Original paper Casper from Vitalik Buterin and Virgil Griffith.
 - Original code: https://github.com/ethereum/casper
 
 
+### Our group's edits (UIUC)
+
+- Added `tqdm` support
+- More debugging stats (delay and throughput)
+- stats to identify bottleneck in timing
+
 ### Running the code
 
 The parameters of the experiment can be found in `parameters.py`.
