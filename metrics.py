@@ -11,6 +11,7 @@ from plot_graph import plot_node_blockchains
 from tqdm import tqdm
 
 
+
 def fraction_justified_and_finalized(validator):
     """Compute the fraction of justified and finalized checkpoints in the main chain.
 
@@ -41,8 +42,8 @@ def delay_throughput(network):
     delay = {}
     Edelay = 0.0
     E2delay = 0.0
-    for block_hash in network.final_time :
-        delay[block_hash] = network.final_time[block_hash] - network.first_proposal_time[block_hash]
+    for block_hash in network.global_finalized_time_absolute :
+        delay[block_hash] = network.global_finalized_time_absolute[block_hash]  - network.first_proposal_time[block_hash]
     for block_hash in delay :
         Edelay += delay[block_hash]
         E2delay += delay[block_hash]**2
@@ -54,19 +55,73 @@ def delay_throughput(network):
         E2delay = E2delay
     min_time = BLOCK_PROPOSAL_TIME*EPOCH_SIZE*NUM_EPOCH
     max_time = 0
-    for block_hash in network.final_time:
-        if(network.final_time[block_hash]>=max_time):
-            max_time = network.final_time[block_hash]
-    for block_hash in network.final_time:
+    max_epoch=0
+    for block_hash in network.global_finalized_time_absolute:
+        if(network.global_finalized_time_absolute[block_hash]>=max_time):
+            max_time = network.global_finalized_time_absolute[block_hash]
+    for block_hash in network.global_finalized_time_absolute:
         if(network.first_proposal_time[block_hash]<=min_time):
             min_time = network.first_proposal_time[block_hash]
+    for block_hash in network.global_finalized_time_absolute:
+        if((network.processed[block_hash].height)/EPOCH_SIZE>=max_epoch):
+            max_epoch = (network.processed[block_hash].height)/EPOCH_SIZE
 
-    if len(network.final_time)>0:
-        throughput = (max_time - min_time)/len(network.final_time)
+    if len(network.global_finalized_time)>0:
+        throughput = max_epoch/(max_time - min_time)
     else:
-        throughput = BLOCK_PROPOSAL_TIME*EPOCH_SIZE*NUM_EPOCH  #max_time - min_time 
-    return Edelay, E2delay, throughput, len(network.final_time)
+        throughput = 0  #max_time - min_time 
+    return Edelay, E2delay, throughput, len(network.global_finalized_time)
 
+def timing_chain(network):
+    timing = {}
+    sum_timing = [0,0,0,0,0,0,0,0]
+    timing_count = [0,0,0,0,0,0,0,0]
+    for blockhash in network.global_finalized_time:
+        timing[blockhash] = [network.first_justification_time.get(blockhash,-1), network.global_justified_time.get(blockhash,-1), \
+        network.first_justified_time.get(blockhash,-1), network.last_justified_time.get(blockhash,-1), network.first_finalization_time.get(blockhash,-1), \
+        network.global_finalized_time.get(blockhash,-1), network.first_finalized_time.get(blockhash,-1), network.last_finalized_time.get(blockhash,-1)  ]
+    for blockhash in timing:
+        for i in range(len(timing[blockhash])):
+            if timing[blockhash][i] == -1:
+                pass
+            else:
+                sum_timing[i] = sum_timing[i] + timing[blockhash][i]
+                timing_count[i] = timing_count[i] + 1
+
+    return np.array(sum_timing), np.array(timing_count)
+
+
+
+
+
+def finalization_quartiles(network):
+    sumquartiles = [0.0,0.0,0.0,0.0]
+    sumsquarequartiles = [0.0,0.0,0.0,0.0]
+    len_valid_sums = [0.0,0.0,0.0,0.0]
+
+    Equartiles = [0.0,0.0,0.0,0.0]
+    E2quartiles = [0.0,0.0,0.0,0.0]
+    stdquartiles = [0.0,0.0,0.0,0.0]
+
+    for blockhash in network.final_quartiles:
+        for i in range(4):
+            if len(network.final_quartiles[blockhash])>i:
+                sumquartiles[i] = sumquartiles[i] + network.final_quartiles[blockhash][i]
+                sumsquarequartiles[i] += network.final_quartiles[blockhash][i]**2
+                len_valid_sums[i] +=1
+    '''
+    for i in range(4):            
+        if len_valid_sums[i]>0:
+            Equartiles[i] = Equartiles[i]/len_valid_sums[i]
+            E2quartiles[i] = E2quartiles[i]/len_valid_sums[i]
+            stdquartiles[i] = E2quartiles[i] - Equartiles[i]**2
+            stdquartiles[i] = np.sqrt(stdquartiles[i])
+        else:
+            Equartiles[i] = None
+            stdquartiles[i] = None
+    '''
+    print(len_valid_sums)
+    return sumquartiles,sumsquarequartiles,len_valid_sums
 
 def main_chain_size(validator):
     """Computes the number of blocks in the main chain."""
@@ -139,114 +194,139 @@ def count_forks(validator):
 
 def print_metrics_latency(latencies, validator_set=VALIDATOR_IDS):
     for latency in latencies:
-
-        #fcsum = {}
-
-        # keep track of supermajority links data
+        jfsum = 0.0
+        squarejfsum = 0.0
+        ffsum = 0.0
+        squareffsum = 0.0
+        jffsum = 0.0
+        squarejffsum = 0.0
+        mcsum = 0.0
+        squaremcsum = 0.0
+        busum = 0.0
+        squarebusum = 0.0
+        delaysum = 0.0
+        squaredelaysum = 0.0
+        throughputsum = 0.0
+        squarethroughputsum = 0.0
+        total_finalized = 0.0
+        num_finalized_tries = 0.0
+        finalization_achieved = True
+        Equartiles = [0.0,0.0,0.0,0.0]
+        E2quartiles = [0.0,0.0,0.0,0.0]
+        stdquartiles = [0.0,0.0,0.0,0.0]
+        len_valid_sums = [0.0,0.0,0.0,0.0]
+        Etiming = np.zeros((8))
+        timing_count = np.zeros((8))
         sml_stats = {}
-
+        #fcsum = {}
         network = Network(exponential_latency(latency))
         validators = [VoteValidator(network, i) for i in validator_set]
 
-        for t in tqdm(range(BLOCK_PROPOSAL_TIME * EPOCH_SIZE * (NUM_EPOCH+1))):
+        for t in range(BLOCK_PROPOSAL_TIME * EPOCH_SIZE * NUM_EPOCH):
             network.tick(sml_stats)
             # if t % (BLOCK_PROPOSAL_TIME * EPOCH_SIZE) == 0:
             #     filename = os.path.join(LOG_DIR, 'plot_{:03d}.png'.format(t))
             #     plot_node_blockchains(validators, filename)
 
-            
-            # capture data at regular intervals
-            jfsum = 0.0
-            squarejfsum = 0.0
-            ffsum = 0.0
-            squareffsum = 0.0
-            jffsum = 0.0
-            squarejffsum = 0.0
-            mcsum = 0.0
-            squaremcsum = 0.0
-            busum = 0.0
-            squarebusum = 0.0
-            delaysum = 0.0
-            squaredelaysum = 0.0
-            throughputsum = 0.0
-            squarethroughputsum = 0.0
-            total_finalized = 0.0
+        for val in validators:
+            jf, ff, jff = fraction_justified_and_finalized(val)
+            jfsum += jf
+            squarejfsum += jf**2
+            ffsum += ff
+            squareffsum += ff**2
+            jffsum += jff
+            squarejffsum += jff**2
+            mcsum += main_chain_size(val)
+            squaremcsum += main_chain_size(val)**2
+            busum += blocks_under_highest_justified(val)
+            squarebusum += blocks_under_highest_justified(val)**2
+            #fc = count_forks(val)
+            #for l in fc.keys():
+                #fcsum[l] = fcsum.get(l, 0) + fc[l]
 
-            if (t % (BLOCK_PROPOSAL_TIME * EPOCH_SIZE * NUM_EPOCH_INTERVAL) == 0):
-                curr_epoch = t // (BLOCK_PROPOSAL_TIME * EPOCH_SIZE)
+        Edelay,E2delay,throughput,num_finalized = delay_throughput(network)
+        delaysum += Edelay*num_finalized
+        squaredelaysum += E2delay*num_finalized
+        if num_finalized>0:
+            throughputsum +=throughput
+            num_finalized_tries = num_finalized_tries + 1
+            squarethroughputsum += throughput**2
+        total_finalized += num_finalized
 
-                for val in validators:
-                    jf, ff, jff = fraction_justified_and_finalized(val)
-                    jfsum += jf
-                    squarejfsum += jf**2
-                    ffsum += ff
-                    squareffsum += ff**2
-                    jffsum += jff
-                    squarejffsum += jff**2
-                    mcsum += main_chain_size(val)
-                    squaremcsum += main_chain_size(val)**2
-                    busum += blocks_under_highest_justified(val)
-                    squarebusum += blocks_under_highest_justified(val)**2
-                    #fc = count_forks(val)
-                    #for l in fc.keys():
-                        #fcsum[l] = fcsum.get(l, 0) + fc[l]
+        tempEquartiles,tempE2quartiles,templen_valid_sums = finalization_quartiles(network)
+        for i in range(4):
+            if templen_valid_sums[i]>0 :   
+                Equartiles[i] += tempEquartiles[i]
+                E2quartiles[i] += tempE2quartiles[i]
+                len_valid_sums[i] += templen_valid_sums[i]
 
-                Edelay,E2delay,throughput,num_finalized = delay_throughput(network)
-                delaysum += Edelay*num_finalized
-                squaredelaysum += E2delay*num_finalized
-                throughputsum +=throughput
-                squarethroughputsum += throughput**2
-                total_finalized += num_finalized
+        temp_timing,temp_timing_count = timing_chain(network)
+        Etiming += temp_timing
+        timing_count += temp_timing_count
 
-                if total_finalized > 0 :
-                    Edelay = delaysum/total_finalized
-                    E2delay = squaredelaysum/total_finalized
-                else:
-                    Edelay = Edelay
-                    E2delay = E2delay
-                    print('No finalization Achieved')
-                vardelay = E2delay - Edelay**2
-                Ethroughput = throughputsum
-                E2throughput = squarethroughputsum
-                varthroughput = E2throughput - Ethroughput**2    
-
-
-                Ejf = jfsum/len(validators)
-                E2jf = squarejfsum/len(validators)
-                Ejff = jffsum/len(validators)
-                E2jff = squarejffsum/len(validators)
-                Eff = ffsum/len(validators)
-                E2ff = squareffsum/len(validators)
-                Emc = mcsum/len(validators)
-                E2mc = squaremcsum/len(validators)
-                Ebu = busum/len(validators)
-                E2bu = squarebusum/len(validators)
-                varjf = E2jf - Ejf**2
-                varjff = E2jff - Ejff**2
-                varff = E2ff - Eff**2
-                varmc = E2mc - Emc**2
-                varbu = E2bu - Ebu**2
+    if total_finalized > 0 :
+        Edelay = delaysum/total_finalized
+        E2delay = squaredelaysum/total_finalized
+        vardelay = E2delay - Edelay**2
+        Ethroughput = throughputsum/num_finalized_tries
+        E2throughput = squarethroughputsum/num_finalized_tries
+        varthroughput = E2throughput - Ethroughput**2    
+    else:
+        finalization_achieved = False
+        #print('No finalization Achieved')
+    
+    for i in range(4):            
+        if len_valid_sums[i]>0:
+            Equartiles[i] = Equartiles[i]/len_valid_sums[i]
+            E2quartiles[i] = E2quartiles[i]/len_valid_sums[i]
+            stdquartiles[i] = E2quartiles[i] - Equartiles[i]**2
+            stdquartiles[i] = np.sqrt(stdquartiles[i])
+        else:
+            Equartiles[i] = None
+            stdquartiles[i] = None
 
 
-                print('----------')
-                print('Latency: {}'.format(latency))
-                print('snapshot {}/{}'.format(curr_epoch,NUM_EPOCH))
-                print('----------')
-                print('Justified: {}'.format([Ejf,varjf]))
-                print('Finalized: {}'.format([Eff,varff]))
-                print('Justified in forks: {}'.format([Ejff,varjff]))
-                print('Main chain size: {}'.format([Emc,varmc]))
-                print('Blocks under main justified: {}'.format([Ebu,varbu]))
-                print('Delay:{}'.format([Edelay,vardelay]))
-                print('Throughput:{}'.format([Ethroughput,varthroughput]))
-                print('Main chain fraction: {}'.format(
-                    mcsum / (len(validators) * (EPOCH_SIZE * NUM_EPOCH + 1))))
-                #for l in sorted(fcsum.keys()):
-                    #if l > 0:
-                        #frac = float(fcsum[l]) / float(fcsum[0])
-                        #print('Fraction of forks of size {}: {}'.format(l, frac))
-                print('supermajority link stats: {}'.format(sml_stats))
-                print('')
+    Ejf = jfsum/len(validators)/num_tries
+    E2jf = squarejfsum/len(validators)/num_tries
+    Ejff = jffsum/len(validators)/num_tries
+    E2jff = squarejffsum/len(validators)/num_tries
+    Eff = ffsum/len(validators)/num_tries
+    E2ff = squareffsum/len(validators)/num_tries
+    Emc = mcsum/len(validators)/num_tries
+    E2mc = squaremcsum/len(validators)/num_tries
+    Ebu = busum/len(validators)/num_tries
+    E2bu = squarebusum/len(validators)/num_tries
+    varjf = E2jf - Ejf**2
+    varjff = E2jff - Ejff**2
+    varff = E2ff - Eff**2
+    varmc = E2mc - Emc**2
+    varbu = E2bu - Ebu**2
+
+    Etiming = Etiming/timing_count
+
+    print('Latency: {}'.format(latency))
+    print('Timing: {}'.format(Etiming))
+    print('Bar_graph: {}'.format([Etiming[1],(Etiming[2]-Etiming[1]),(Etiming[4]-Etiming[2]),(Etiming[5]-Etiming[4]),(Etiming[6]-Etiming[5]),(Etiming[7]-Etiming[6])]))
+    #print('Justified: {}'.format([Ejf,varjf]))
+    #print('Finalized: {}'.format([Eff,varff]))
+    print('Justified in forks: {}'.format([Ejff,np.sqrt(varjff)]))
+    print('Main chain size: {}'.format([Emc,np.sqrt(varmc)]))
+    print('Main chain fraction:{}'.format([Emc/EPOCH_SIZE/NUM_EPOCH, np.sqrt(varmc)/EPOCH_SIZE/NUM_EPOCH ]))
+    print('Blocks under main justified: {}'.format([Ebu,varbu]))
+    print('finalization_quartiles:{}'.format([Equartiles,stdquartiles]))
+    if finalization_achieved :
+        print('Delay:{}'.format([Edelay,vardelay]))
+        print('Throughput:{}'.format([Ethroughput,varthroughput]))
+    else:
+        print('No finalization achieved')
+    #print('Main chain fraction: {}'.format(
+    #    mcsum / (len(validators) * num_tries * (EPOCH_SIZE * NUM_EPOCH + 1))))
+    #for l in sorted(fcsum.keys()):
+        #if l > 0:
+            #frac = float(fcsum[l]) / float(fcsum[0])
+            #print('Fraction of forks of size {}: {}'.format(l, frac))
+    print('supermajority link stats: {}'.format(sml_stats))
+    print('')
 
 
 if __name__ == '__main__':
@@ -262,11 +342,9 @@ if __name__ == '__main__':
     print('``````````````````')
     print("""running test
             NUM_EPOCH: {}
-            NUM_EPOCH_INTERVAL: {}
             SUPER_MAJORITY: {}""".
             format(NUM_EPOCH,
-                   NUM_EPOCH_INTERVAL,
-                   SUPER_MAJORITY))
+                    SUPER_MAJORITY))
     print('``````````````````')
 
     for fraction_disconnected in fractions:

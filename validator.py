@@ -34,7 +34,7 @@ class Validator(object):
         # Closest checkpoint ancestor for each block
         self.tail_membership = {ROOT.hash: ROOT.hash}
         self.id = id
-        self.network.report_proposal(ROOT.hash)
+        self.network.report_proposal(ROOT)
 
     # If we processed an object but did not receive some dependencies
     # needed to process it, save it to be processed later
@@ -85,7 +85,7 @@ class Validator(object):
             # One node is authorized to create a new block and broadcast it
             new_block = Block(self.head, self.finalized_dynasties)
             self.network.broadcast(new_block)
-            self.network.report_proposal(new_block.hash)
+            self.network.report_proposal(new_block)
             self.on_receive(new_block, sml_stats)  # immediately "receive" the new block (no network latency)
 
 class VoteValidator(Validator):
@@ -97,7 +97,7 @@ class VoteValidator(Validator):
         # justified checkpoint
         self.head = ROOT
         self.highest_justified_checkpoint = ROOT
-        self.main_chain_size = 1
+        self.main_chain_size = 0
 
         # Set of justified block hashes
         self.justified = {ROOT.hash}
@@ -200,8 +200,9 @@ class VoteValidator(Validator):
         # we are on the right chain, the head is simply the latest block
         if self.is_ancestor(self.highest_justified_checkpoint,
                             self.tail_membership[block.hash]):
-            self.head = block
-            self.main_chain_size += 1
+        	if self.head.height < block.height:
+        		self.head = block
+        		self.main_chain_size = block.height
 
         # otherwise, we are not on the right chain
         else:
@@ -267,6 +268,7 @@ class VoteValidator(Validator):
                             target_block.epoch,
                             self.id)
                 self.network.broadcast(vote)
+                self.network.report_vote(vote)
                 assert self.processed[target_block.hash]
 
     def accept_vote(self, vote, sml_stats = {}):
@@ -341,10 +343,16 @@ class VoteValidator(Validator):
                 sml_stats[vote.epoch_target - vote.epoch_source ] = 1
 
             # Mark the target as justified
+            try:
+                sml_stats[vote.epoch_target - vote.epoch_source] += 1
+            except KeyError:
+                sml_stats[vote.epoch_target - vote.epoch_source ] = 1
+
             self.justified.add(vote.target)
+            self.network.report_justified(vote.target,self.id)
             if vote.target in self.justification_dependencies:
                 for d in self.justification_dependencies[vote.target]:
-                    self.on_receive(d, sml_stats)
+                    self.on_receive(d,sml_stats)
                 del self.justification_dependencies[vote.target]
 
             if vote.epoch_target > self.highest_justified_checkpoint.epoch:
@@ -358,7 +366,7 @@ class VoteValidator(Validator):
         return True
 
     # Called on processing any object
-    def on_receive(self, obj, sml_stats = {}):
+    def on_receive(self, obj, sml_stats={}):
         if obj.hash in self.processed:
             return False
         if isinstance(obj, Block):
@@ -371,5 +379,5 @@ class VoteValidator(Validator):
             self.processed[obj.hash] = obj
             if obj.hash in self.dependencies:
                 for d in self.dependencies[obj.hash]:
-                    self.on_receive(d, sml_stats)
+                    self.on_receive(d,sml_stats)
                 del self.dependencies[obj.hash]
