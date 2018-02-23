@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import os
 import numpy as np
 
@@ -7,8 +8,7 @@ from utils import exponential_latency
 from network import Network
 from validator import VoteValidator
 from plot_graph import plot_node_blockchains
-
-
+from tqdm import tqdm
 
 def fraction_justified_and_finalized(validator):
     """Compute the fraction of justified and finalized checkpoints in the main chain.
@@ -190,7 +190,7 @@ def count_forks(validator):
     return count_forks
 
 
-def print_metrics_latency(latencies, num_tries, validator_set=VALIDATOR_IDS):
+def print_metrics_latency(latencies, validator_set=VALIDATOR_IDS):
     for latency in latencies:
         jfsum = 0.0
         squarejfsum = 0.0
@@ -217,51 +217,50 @@ def print_metrics_latency(latencies, num_tries, validator_set=VALIDATOR_IDS):
         timing_count = np.zeros((8))
         sml_stats = {}
         #fcsum = {}
-        for i in range(num_tries):
-            network = Network(exponential_latency(latency))
-            validators = [VoteValidator(network, i) for i in validator_set]
+        network = Network(exponential_latency(latency))
+        validators = [VoteValidator(network, i) for i in validator_set]
 
-            for t in range(BLOCK_PROPOSAL_TIME * EPOCH_SIZE * NUM_EPOCH):
-                network.tick(sml_stats)
-                # if t % (BLOCK_PROPOSAL_TIME * EPOCH_SIZE) == 0:
-                #     filename = os.path.join(LOG_DIR, 'plot_{:03d}.png'.format(t))
-                #     plot_node_blockchains(validators, filename)
+        for t in tqdm(range(BLOCK_PROPOSAL_TIME * EPOCH_SIZE * NUM_EPOCH)):
+            network.tick(sml_stats)
+            # if t % (BLOCK_PROPOSAL_TIME * EPOCH_SIZE) == 0:
+            #     filename = os.path.join(LOG_DIR, 'plot_{:03d}.png'.format(t))
+            #     plot_node_blockchains(validators, filename)
 
-            for val in validators:
-                jf, ff, jff = fraction_justified_and_finalized(val)
-                jfsum += jf
-                squarejfsum += jf**2
-                ffsum += ff
-                squareffsum += ff**2
-                jffsum += jff
-                squarejffsum += jff**2
-                mcsum += main_chain_size(val)
-                squaremcsum += main_chain_size(val)**2
-                busum += blocks_under_highest_justified(val)
-                squarebusum += blocks_under_highest_justified(val)**2
-                #fc = count_forks(val)
-                #for l in fc.keys():
-                    #fcsum[l] = fcsum.get(l, 0) + fc[l]
+        for val in validators:
+            jf, ff, jff = fraction_justified_and_finalized(val)
+            jfsum += jf
+            squarejfsum += jf**2
+            ffsum += ff
+            squareffsum += ff**2
+            jffsum += jff
+            squarejffsum += jff**2
+            mcsum += main_chain_size(val)
+            squaremcsum += main_chain_size(val)**2
+            busum += blocks_under_highest_justified(val)
+            squarebusum += blocks_under_highest_justified(val)**2
+            #fc = count_forks(val)
+            #for l in fc.keys():
+                #fcsum[l] = fcsum.get(l, 0) + fc[l]
 
-            Edelay,E2delay,throughput,num_finalized = delay_throughput(network)
-            delaysum += Edelay*num_finalized
-            squaredelaysum += E2delay*num_finalized
-            if num_finalized>0:
-                throughputsum +=throughput
-                num_finalized_tries = num_finalized_tries + 1
-                squarethroughputsum += throughput**2
-            total_finalized += num_finalized
+        Edelay,E2delay,throughput,num_finalized = delay_throughput(network)
+        delaysum += Edelay*num_finalized
+        squaredelaysum += E2delay*num_finalized
+        if num_finalized>0:
+            throughputsum +=throughput
+            num_finalized_tries = num_finalized_tries + 1
+            squarethroughputsum += throughput**2
+        total_finalized += num_finalized
 
-            tempEquartiles,tempE2quartiles,templen_valid_sums = finalization_quartiles(network)
-            for i in range(4):
-                if templen_valid_sums[i]>0 :   
-                    Equartiles[i] += tempEquartiles[i]
-                    E2quartiles[i] += tempE2quartiles[i]
-                    len_valid_sums[i] += templen_valid_sums[i]
+        tempEquartiles,tempE2quartiles,templen_valid_sums = finalization_quartiles(network)
+        for i in range(4):
+            if templen_valid_sums[i]>0 :   
+                Equartiles[i] += tempEquartiles[i]
+                E2quartiles[i] += tempE2quartiles[i]
+                len_valid_sums[i] += templen_valid_sums[i]
 
-            temp_timing,temp_timing_count = timing_chain(network)
-            Etiming += temp_timing
-            timing_count += temp_timing_count
+        temp_timing,temp_timing_count = timing_chain(network)
+        Etiming += temp_timing
+        timing_count += temp_timing_count
 
         if total_finalized > 0 :
             Edelay = delaysum/total_finalized
@@ -285,16 +284,16 @@ def print_metrics_latency(latencies, num_tries, validator_set=VALIDATOR_IDS):
                 stdquartiles[i] = None
 
 
-        Ejf = jfsum/len(validators)/num_tries
-        E2jf = squarejfsum/len(validators)/num_tries
-        Ejff = jffsum/len(validators)/num_tries
-        E2jff = squarejffsum/len(validators)/num_tries
-        Eff = ffsum/len(validators)/num_tries
-        E2ff = squareffsum/len(validators)/num_tries
-        Emc = mcsum/len(validators)/num_tries
-        E2mc = squaremcsum/len(validators)/num_tries
-        Ebu = busum/len(validators)/num_tries
-        E2bu = squarebusum/len(validators)/num_tries
+        Ejf = jfsum/len(validators)
+        E2jf = squarejfsum/len(validators)
+        Ejff = jffsum/len(validators)
+        E2jff = squarejffsum/len(validators)
+        Eff = ffsum/len(validators)
+        E2ff = squareffsum/len(validators)
+        Emc = mcsum/len(validators)
+        E2mc = squaremcsum/len(validators)
+        Ebu = busum/len(validators)
+        E2bu = squarebusum/len(validators)
         varjf = E2jf - Ejf**2
         varjff = E2jff - Ejff**2
         varff = E2ff - Eff**2
@@ -305,12 +304,15 @@ def print_metrics_latency(latencies, num_tries, validator_set=VALIDATOR_IDS):
 
         print('Latency: {}'.format(latency))
         print('Timing: {}'.format(Etiming))
-        print('Bar_graph: {}'.format([Etiming[1],(Etiming[2]-Etiming[1]),(Etiming[4]-Etiming[2]),(Etiming[5]-Etiming[4]),(Etiming[6]-Etiming[5]),(Etiming[7]-Etiming[6])]))
+        print('Bar_graph: {}'.format([Etiming[1], (Etiming[2]-Etiming[1]),
+                            (Etiming[4]-Etiming[2]),(Etiming[5]-Etiming[4]),
+                            (Etiming[6]-Etiming[5]),(Etiming[7]-Etiming[6])]))
         #print('Justified: {}'.format([Ejf,varjf]))
         #print('Finalized: {}'.format([Eff,varff]))
         print('Justified in forks: {}'.format([Ejff,np.sqrt(varjff)]))
         print('Main chain size: {}'.format([Emc,np.sqrt(varmc)]))
-        print('Main chain fraction:{}'.format([Emc/EPOCH_SIZE/NUM_EPOCH, np.sqrt(varmc)/EPOCH_SIZE/NUM_EPOCH ]))
+        print('Main chain fraction:{}'.format([Emc/EPOCH_SIZE/NUM_EPOCH,
+                            np.sqrt(varmc)/EPOCH_SIZE/NUM_EPOCH ]))
         print('Blocks under main justified: {}'.format([Ebu,varbu]))
         print('finalization_quartiles:{}'.format([Equartiles,stdquartiles]))
         if finalization_achieved :
@@ -318,25 +320,28 @@ def print_metrics_latency(latencies, num_tries, validator_set=VALIDATOR_IDS):
             print('Throughput:{}'.format([Ethroughput,varthroughput]))
         else:
             print('No finalization achieved')
-        #print('Main chain fraction: {}'.format(
-        #    mcsum / (len(validators) * num_tries * (EPOCH_SIZE * NUM_EPOCH + 1))))
-        #for l in sorted(fcsum.keys()):
-            #if l > 0:
-                #frac = float(fcsum[l]) / float(fcsum[0])
-                #print('Fraction of forks of size {}: {}'.format(l, frac))
         print('supermajority link stats: {}'.format(sml_stats))
         print('')
 
 
 if __name__ == '__main__':
-    LOG_DIR = 'metrics'
-    if not os.path.exists(LOG_DIR):
-        os.makedirs(LOG_DIR)
+    # LOG_DIR = 'metrics'
+    # if not os.path.exists(LOG_DIR):
+        # os.makedirs(LOG_DIR)
 
     # Uncomment to have fractions of disconnected nodes
     # fractions = np.arange(0.0, 0.4, 0.05)
     # fractions = [0.31, 0.32, 0.33]
     fractions = [0.0]
+
+    print('``````````````````')
+    print("""running test
+            NUM_EPOCH: {}
+            SUPER_MAJORITY: {}""".
+            format(NUM_EPOCH,
+                    SUPER_MAJORITY))
+    print('``````````````````')
+
     for fraction_disconnected in fractions:
         num_validators = int((1.0 - fraction_disconnected) * NUM_VALIDATORS)
         validator_set = VALIDATOR_IDS[:num_validators]
@@ -347,6 +352,5 @@ if __name__ == '__main__':
         # Uncomment to have different latencies
         #latencies = [i for i in range(10, 300, 20)] + [500, 750, 1000]
         latencies = [0,50,100,250,500,1000]
-        num_tries = 1  # number of samples for each set of parameters
 
-        print_metrics_latency(latencies, num_tries, validator_set)
+        print_metrics_latency(latencies, validator_set)

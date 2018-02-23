@@ -1,0 +1,351 @@
+``````````````````
+running test
+            NUM_EPOCH: 300
+            NUM_EPOCH_INTERVAL: 100
+            SUPER_MAJORITY: 0.6666666666666666
+``````````````````
+Total height of nodes: 100
+height of connected of nodes: 100
+No finalization Achieved
+----------
+Latency: 0
+snapshot 0/300
+----------
+Justified: [1.0, 0.0]
+Finalized: [1.0, 0.0]
+Justified in forks: [0.0, 0.0]
+Main chain size: [1.0, 0.0]
+Blocks under main justified: [1.0, 0.0]
+Delay:[0.0, 0.0]
+Throughput:[150000.0, 0.0]
+Main chain fraction: 0.0006662225183211193
+supermajority link stats: {}
+
+----------
+Latency: 0
+snapshot 100/300
+----------
+Justified: [1.0, 0.0]
+Finalized: [0.9900990099009885, 2.55351295663786e-15]
+Justified in forks: [0.0, 0.0]
+Main chain size: [501.0, 0.0]
+Blocks under main justified: [501.0, 0.0]
+Delay:[501.0, 99.0]
+Throughput:[499.02, 0.0]
+Main chain fraction: 0.33377748167888077
+supermajority link stats: {1: 340000}
+
+----------
+Latency: 0
+snapshot 200/300
+----------
+Justified: [1.0, 0.0]
+Finalized: [0.9950248756218929, -5.995204332975845e-15]
+Justified in forks: [0.0, 0.0]
+Main chain size: [1001.0, 0.0]
+Blocks under main justified: [1001.0, 0.0]
+Delay:[501.5, 49.75]
+Throughput:[499.51, 0.0]
+Main chain fraction: 0.6668887408394404
+supermajority link stats: {1: 680000}
+
+----------
+Latency: 0
+snapshot 300/300
+----------
+Justified: [1.0, 0.0]
+Finalized: [0.996677740863788, 7.771561172376096e-16]
+Justified in forks: [0.0, 0.0]
+Main chain size: [1501.0, 0.0]
+Blocks under main justified: [1501.0, 0.0]
+Delay:[501.6666666666667, 33.222222222189885]
+Throughput:[499.67333333333335, 0.0]
+Main chain fraction: 1.0
+supermajority link stats: {1: 1020000}
+
+No finalization Achieved
+----------
+Latency: 50
+snapshot 0/300
+----------
+Justified: [1.0, 0.0]
+Finalized: [1.0, 0.0]
+Justified in forks: [0.0, 0.0]
+Main chain size: [1.0, 0.0]
+Blocks under main justified: [1.0, 0.0]
+Delay:[0.0, 0.0]
+Throughput:[150000.0, 0.0]
+Main chain fraction: 0.0006662225183211193
+supermajority link stats: {}
+
+----------
+Latency: 50
+snapshot 100/300
+----------
+Justified: [1.0, 0.0]
+Finalized: [0.9882352941176447, 6.5503158452884236e-15]
+Justified in forks: [0.0, 0.0]
+Main chain size: [421.0, 0.0]
+Blocks under main justified: [497.0, 0.0]
+Delay:[1179.7142857142858, 15034.037414965685]
+Throughput:[594.7380952380952, 0.0]
+Main chain fraction: 0.2804796802131912
+supermajority link stats: {1: 276697}
+
+----------
+Latency: 50
+snapshot 200/300
+----------
+Justified: [1.0, 0.0]
+Finalized: [0.9940810791772329, 5.892408783125802e-11]
+Justified in forks: [0.0, 0.0]
+Main chain size: [840.75, 1.1875]
+Blocks under main justified: [999.69, 1.7138999999733642]
+Delay:[1186.8392857142858, 15747.813456632663]
+Throughput:[595.2380952380952, 0.0]
+Main chain fraction: 0.560126582278481
+supermajority link stats: {1: 554772}
+
+----------
+Latency: 50
+snapshot 300/300
+----------
+Justified: [1.0, 0.0]
+Finalized: [0.9960474308300417, -1.887379141862766e-15]
+Justified in forks: [0.0, 0.0]
+Main chain size: [1261.0, 0.0]
+Blocks under main justified: [1496.0, 0.0]
+Delay:[1187.0992063492063, 15469.295713655883]
+Throughput:[595.1388888888889, 0.0]
+Main chain fraction: 0.8401065956029313
+supermajority link stats: {1: 832700}
+
+No finalization Achieved
+----------
+Latency: 100
+snapshot 0/300
+----------
+Justified: [1.0, 0.0]
+Finalized: [1.0, 0.0]
+Justified in forks: [0.0, 0.0]
+Main chain size: [1.0, 0.0]
+Blocks under main justified: [1.0, 0.0]
+Delay:[0.0, 0.0]
+Throughput:[150000.0, 0.0]
+Main chain fraction: 0.0006662225183211193
+supermajority link stats: {}
+
+----------
+Latency: 100
+snapshot 100/300
+----------
+Justified: [1.0, 0.0]
+Finalized: [0.9824561403508768, 1.887379141862766e-15]
+Justified in forks: [0.0, 0.0]
+Main chain size: [281.0, 0.0]
+Blocks under main justified: [493.0, 0.0]
+Delay:[2075.0, 100013.39285714272]
+Throughput:[892.6964285714286, 0.0]
+Main chain fraction: 0.1872085276482345
+supermajority link stats: {1: 153294}
+
+----------
+Latency: 100
+snapshot 200/300
+----------
+Justified: [1.0, 0.0]
+Finalized: [0.9909909909909931, -3.4416913763379853e-15]
+Justified in forks: [0.0, 0.0]
+Main chain size: [551.0, 0.0]
+Blocks under main justified: [994.0, 0.0]
+Delay:[2072.6545454545453, 86036.58975206595]
+Throughput:[909.0181818181818, 0.0]
+Main chain fraction: 0.3670886075949367
+supermajority link stats: {1: 293093}
+
+----------
+Latency: 100
+snapshot 300/300
+----------
+Justified: [1.0, 0.0]
+Finalized: [0.9939759036144562, 2.55351295663786e-15]
+Justified in forks: [0.0, 0.0]
+Main chain size: [826.0, 0.0]
+Blocks under main justified: [1492.0, 0.0]
+Delay:[2066.5878787878787, 84594.63015610632]
+Throughput:[908.9636363636364, 0.0]
+Main chain fraction: 0.5502998001332445
+supermajority link stats: {1: 435498}
+
+No finalization Achieved
+----------
+Latency: 250
+snapshot 0/300
+----------
+Justified: [1.0, 0.0]
+Finalized: [1.0, 0.0]
+Justified in forks: [0.0, 0.0]
+Main chain size: [1.0, 0.0]
+Blocks under main justified: [1.0, 0.0]
+Delay:[0.0, 0.0]
+Throughput:[150000.0, 0.0]
+Main chain fraction: 0.0006662225183211193
+supermajority link stats: {}
+
+----------
+Latency: 250
+snapshot 100/300
+----------
+Justified: [0.6730952380952382, 3.520408163210087e-05]
+Finalized: [0.4188359788359785, 0.0001112622826912324]
+Justified in forks: [0.0, 0.0]
+Main chain size: [133.7, 6.210000000002765]
+Blocks under main justified: [482.47, 35.66909999997006]
+Delay:[4517.833333333333, 422868.80555555597]
+Throughput:[4166.083333333333, 0.0]
+Main chain fraction: 0.08907395069953364
+supermajority link stats: {1: 19279, 2: 5999, 3: 7700}
+
+----------
+Latency: 250
+snapshot 200/300
+----------
+Justified: [0.685185185185185, 3.885780586188048e-16]
+Finalized: [0.4629629629629624, 2.498001805406602e-16]
+Justified in forks: [0.0, 0.0]
+Main chain size: [266.0, 0.0]
+Blocks under main justified: [987.99, 0.00989999994635582]
+Delay:[4689.84, 429001.49439999834]
+Throughput:[3999.8, 0.0]
+Main chain fraction: 0.17721518987341772
+supermajority link stats: {1: 44511, 2: 12400, 3: 7900, 4: 400}
+
+----------
+Latency: 250
+snapshot 300/300
+----------
+Justified: [0.6707317073170738, -8.881784197001252e-16]
+Finalized: [0.451219512195123, -7.494005416219807e-16]
+Justified in forks: [0.0, 0.0]
+Main chain size: [406.0, 0.0]
+Blocks under main justified: [1485.0, 0.0]
+Delay:[4698.324324324324, 379873.6245434657]
+Throughput:[3909.4054054054054, 0.0]
+Main chain fraction: 0.27048634243837444
+supermajority link stats: {1: 69000, 2: 18300, 3: 9293, 4: 3800}
+
+No finalization Achieved
+----------
+Latency: 500
+snapshot 0/300
+----------
+Justified: [1.0, 0.0]
+Finalized: [1.0, 0.0]
+Justified in forks: [0.0, 0.0]
+Main chain size: [1.0, 0.0]
+Blocks under main justified: [1.0, 0.0]
+Delay:[0.0, 0.0]
+Throughput:[150000.0, 0.0]
+Main chain fraction: 0.0006662225183211193
+supermajority link stats: {}
+
+----------
+Latency: 500
+snapshot 100/300
+----------
+Justified: [0.47058823529411653, 9.159339953157541e-16]
+Finalized: [0.23529411764705827, 2.2898349882893854e-16]
+Justified in forks: [0.0, 0.0]
+Main chain size: [81.0, 0.0]
+Blocks under main justified: [468.0, 0.0]
+Delay:[7665.333333333333, 53266.88888889551]
+Throughput:[5613.0, 0.0]
+Main chain fraction: 0.05396402398401066
+supermajority link stats: {1: 7795, 2: 2700, 3: 3400, 5: 800}
+
+----------
+Latency: 500
+snapshot 200/300
+----------
+Justified: [0.3939393939393937, 2.220446049250313e-16]
+Finalized: [0.15151515151515182, -6.245004513516506e-17]
+Justified in forks: [0.0, 0.0]
+Main chain size: [161.0, 0.0]
+Blocks under main justified: [953.0, 0.0]
+Delay:[8253.75, 293190.6875]
+Throughput:[11251.25, 0.0]
+Main chain fraction: 0.1072618254497002
+supermajority link stats: {1: 9400, 2: 2700, 3: 5900, 4: 2099, 5: 1400}
+
+----------
+Latency: 500
+snapshot 300/300
+----------
+Justified: [0.4255319148936176, -5.551115123125783e-16]
+Finalized: [0.1276595744680851, 3.469446951953614e-18]
+Justified in forks: [0.0, 0.0]
+Main chain size: [231.0, 0.0]
+Blocks under main justified: [1385.0, 0.0]
+Delay:[8532.2, 544690.1599999815]
+Throughput:[16829.2, 0.0]
+Main chain fraction: 0.15389740173217856
+supermajority link stats: {1: 10200, 2: 10700, 3: 9200, 4: 2100, 5: 1400}
+
+No finalization Achieved
+----------
+Latency: 1000
+snapshot 0/300
+----------
+Justified: [1.0, 0.0]
+Finalized: [1.0, 0.0]
+Justified in forks: [0.0, 0.0]
+Main chain size: [1.0, 0.0]
+Blocks under main justified: [1.0, 0.0]
+Delay:[0.0, 0.0]
+Throughput:[150000.0, 0.0]
+Main chain fraction: 0.0006662225183211193
+supermajority link stats: {}
+
+No finalization Achieved
+----------
+Latency: 1000
+snapshot 100/300
+----------
+Justified: [0.39999999999999925, 7.216449660063518e-16]
+Finalized: [0.19999999999999962, 1.8041124150158794e-16]
+Justified in forks: [0.0, 0.0]
+Main chain size: [21.0, 0.0]
+Blocks under main justified: [182.0, 0.0]
+Delay:[0.0, 0.0]
+Throughput:[150000.0, 0.0]
+Main chain fraction: 0.013990672884743505
+supermajority link stats: {4: 1700}
+
+----------
+Latency: 1000
+snapshot 200/300
+----------
+Justified: [0.35294117647058765, 2.220446049250313e-16]
+Finalized: [0.11764705882352913, 5.724587470723463e-17]
+Justified in forks: [0.0, 0.0]
+Main chain size: [81.0, 0.0]
+Blocks under main justified: [784.0, 0.0]
+Delay:[18339.0, 0.0]
+Throughput:[18339.0, 0.0]
+Main chain fraction: 0.05396402398401066
+supermajority link stats: {1: 1800, 2: 800, 3: 1500, 4: 1700, 6: 1000}
+
+----------
+Latency: 1000
+snapshot 300/300
+----------
+Justified: [0.3232142857142863, 1.8069727890562826e-05]
+Finalized: [0.10607142857142854, 6.505102040848393e-06]
+Justified in forks: [0.0, 0.0]
+Main chain size: [137.5, 12.75]
+Blocks under main justified: [1399.29, 1327.1659000001382]
+Delay:[17019.5, 1741080.25]
+Throughput:[28700.0, 0.0]
+Main chain fraction: 0.09160559626915389
+supermajority link stats: {1: 1900, 2: 818, 3: 1500, 4: 4300, 6: 2200}
+
