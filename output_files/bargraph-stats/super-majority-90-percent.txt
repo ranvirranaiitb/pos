@@ -1,0 +1,7 @@
+``````````````````
+running test
+            NUM_EPOCH: 800
+            SUPER_MAJORITY: 0.9
+``````````````````
+Total height of nodes: 100
+height of connected of nodes: 100
