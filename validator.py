@@ -336,7 +336,7 @@ class VoteValidator(Validator):
         # TODO: we do not deal with finalized dynasties (the pool of validator
         # is always the same right now)
         # If there are enough votes, process them
-        if (self.vote_count[vote.source][vote.target] > (NUM_VALIDATORS * 2) // 3):
+        if (self.vote_count[vote.source][vote.target] > (NUM_VALIDATORS * 1) // 2):
             # Mark the target as justified
             try:
                 sml_stats[vote.epoch_target - vote.epoch_source] += 1
