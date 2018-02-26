@@ -114,6 +114,10 @@ class VoteValidator(Validator):
         # ex: self.vote_count[source][target] will be between 0 and NUM_VALIDATORS
         self.vote_count = {}
 
+        self.depth_finalized = 0
+        self.num_depth_finalized = 0
+        self.highest_finalized_checkpoint_epoch = 0
+
     # TODO: we could write function is_justified only based on self.processed and self.votes
     #       (note that the votes are also stored in self.processed)
     def is_justified(self, _hash):
@@ -164,6 +168,9 @@ class VoteValidator(Validator):
 
         # We receive the block
         self.processed[block.hash] = block
+
+        self.depth_finalized += block.height - self.highest_finalized_checkpoint_epoch*EPOCH_SIZE
+        self.num_depth_finalized += 1
 
         # If it's an epoch block (in general)
         if block.height % EPOCH_SIZE == 0:
@@ -356,6 +363,8 @@ class VoteValidator(Validator):
             # If the source was a direct parent of the target, the source
             # is finalized
             if vote.epoch_source == vote.epoch_target - 1:
+                if vote.epoch_source>self.highest_finalized_checkpoint_epoch:
+                    self.highest_finalized_checkpoint_epoch = vote.epoch_source
                 self.finalized.add(vote.source)
                 self.network.report_finalized(vote.source,self.id)
         return True
