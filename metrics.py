@@ -52,7 +52,7 @@ def delay_throughput(network):
         Edelay = Edelay
         E2delay = E2delay
     min_time = BLOCK_PROPOSAL_TIME*EPOCH_SIZE*NUM_EPOCH
-    max_time = 0
+    max_time = 1
     max_epoch=0
     for block_hash in network.global_finalized_time_absolute:
         if(network.global_finalized_time_absolute[block_hash]>=max_time):
@@ -65,9 +65,10 @@ def delay_throughput(network):
             max_epoch = (network.processed[block_hash].height)/EPOCH_SIZE
 
     if len(network.global_finalized_time)>0:
-        throughput = max_epoch/(max_time - min_time)
+        throughput = max_epoch/(max_time)       #Removed min_time
     else:
         throughput = 0  #max_time - min_time 
+
     return Edelay, E2delay, throughput, len(network.global_finalized_time)
 
 def timing_chain(network):
@@ -88,6 +89,17 @@ def timing_chain(network):
 
     return np.array(sum_timing), np.array(timing_count)
 
+def depth_calculator(validator):
+    depth_finalized = 0
+    num_depth_finalized =0
+    main_chain_size = validator.main_chain_size
+    max_epoch=0
+    for blockhash in validator.finalized:
+        if validator.processed[blockhash].height > max_epoch:
+            max_epoch = validator.processed[blockhash].height
+        num_depth_finalized = 1
+    depth_finalized = (main_chain_size - max_epoch)/EPOCH_SIZE
+    return depth_finalized, num_depth_finalized
 
 
 
@@ -190,7 +202,7 @@ def count_forks(validator):
     return count_forks
 
 
-def print_metrics_latency(latencies, validator_set=VALIDATOR_IDS):
+def print_metrics_latency(num_tries,latencies, validator_set=VALIDATOR_IDS):
     for latency in latencies:
         jfsum = 0.0
         squarejfsum = 0.0
@@ -216,51 +228,59 @@ def print_metrics_latency(latencies, validator_set=VALIDATOR_IDS):
         Etiming = np.zeros((8))
         timing_count = np.zeros((8))
         sml_stats = {}
+        depth_finalized = 0
+        num_depth_finalized = 0
         #fcsum = {}
-        network = Network(exponential_latency(latency))
-        validators = [VoteValidator(network, i) for i in validator_set]
 
-        for t in tqdm(range(BLOCK_PROPOSAL_TIME * EPOCH_SIZE * NUM_EPOCH)):
-            network.tick(sml_stats)
-            # if t % (BLOCK_PROPOSAL_TIME * EPOCH_SIZE) == 0:
-            #     filename = os.path.join(LOG_DIR, 'plot_{:03d}.png'.format(t))
-            #     plot_node_blockchains(validators, filename)
+        for i in range(num_tries):
+            network = Network(exponential_latency(latency))
+            validators = [VoteValidator(network, i) for i in validator_set]
 
-        for val in validators:
-            jf, ff, jff = fraction_justified_and_finalized(val)
-            jfsum += jf
-            squarejfsum += jf**2
-            ffsum += ff
-            squareffsum += ff**2
-            jffsum += jff
-            squarejffsum += jff**2
-            mcsum += main_chain_size(val)
-            squaremcsum += main_chain_size(val)**2
-            busum += blocks_under_highest_justified(val)
-            squarebusum += blocks_under_highest_justified(val)**2
-            #fc = count_forks(val)
-            #for l in fc.keys():
-                #fcsum[l] = fcsum.get(l, 0) + fc[l]
+            for t in tqdm(range(BLOCK_PROPOSAL_TIME * EPOCH_SIZE * NUM_EPOCH)):
+                network.tick(sml_stats)
+                # if t % (BLOCK_PROPOSAL_TIME * EPOCH_SIZE) == 0:
+                #     filename = os.path.join(LOG_DIR, 'plot_{:03d}.png'.format(t))
+                #     plot_node_blockchains(validators, filename)
 
-        Edelay,E2delay,throughput,num_finalized = delay_throughput(network)
-        delaysum += Edelay*num_finalized
-        squaredelaysum += E2delay*num_finalized
-        if num_finalized>0:
-            throughputsum +=throughput
-            num_finalized_tries = num_finalized_tries + 1
-            squarethroughputsum += throughput**2
-        total_finalized += num_finalized
+            for val in validators:
+                jf, ff, jff = fraction_justified_and_finalized(val)
+                jfsum += jf
+                squarejfsum += jf**2
+                ffsum += ff
+                squareffsum += ff**2
+                jffsum += jff
+                squarejffsum += jff**2
+                mcsum += main_chain_size(val)
+                squaremcsum += main_chain_size(val)**2
+                busum += blocks_under_highest_justified(val)
+                squarebusum += blocks_under_highest_justified(val)**2
+                temp_depth_finalized, temp_num_depth_finalized = depth_calculator(val)
+                num_depth_finalized += temp_num_depth_finalized
+                depth_finalized += temp_depth_finalized
 
-        tempEquartiles,tempE2quartiles,templen_valid_sums = finalization_quartiles(network)
-        for i in range(4):
-            if templen_valid_sums[i]>0 :   
-                Equartiles[i] += tempEquartiles[i]
-                E2quartiles[i] += tempE2quartiles[i]
-                len_valid_sums[i] += templen_valid_sums[i]
+                #fc = count_forks(val)
+                #for l in fc.keys():
+                    #fcsum[l] = fcsum.get(l, 0) + fc[l]
 
-        temp_timing,temp_timing_count = timing_chain(network)
-        Etiming += temp_timing
-        timing_count += temp_timing_count
+            Edelay,E2delay,throughput,num_finalized = delay_throughput(network)
+            delaysum += Edelay*num_finalized
+            squaredelaysum += E2delay*num_finalized
+            if num_finalized>0:
+                throughputsum +=throughput
+                num_finalized_tries = num_finalized_tries + 1
+                squarethroughputsum += throughput**2
+            total_finalized += num_finalized
+
+            tempEquartiles,tempE2quartiles,templen_valid_sums = finalization_quartiles(network)
+            for i in range(4):
+                if templen_valid_sums[i]>0 :   
+                    Equartiles[i] += tempEquartiles[i]
+                    E2quartiles[i] += tempE2quartiles[i]
+                    len_valid_sums[i] += templen_valid_sums[i]
+
+            temp_timing,temp_timing_count = timing_chain(network)
+            Etiming += temp_timing
+            timing_count += temp_timing_count
 
         if total_finalized > 0 :
             Edelay = delaysum/total_finalized
@@ -300,6 +320,8 @@ def print_metrics_latency(latencies, validator_set=VALIDATOR_IDS):
         varmc = E2mc - Emc**2
         varbu = E2bu - Ebu**2
 
+        depth_finalized = depth_finalized/num_depth_finalized
+
         Etiming = Etiming/timing_count
 
         print('Latency: {}'.format(latency))
@@ -318,6 +340,7 @@ def print_metrics_latency(latencies, validator_set=VALIDATOR_IDS):
         if finalization_achieved :
             print('Delay:{}'.format([Edelay,vardelay]))
             print('Throughput:{}'.format([Ethroughput,varthroughput]))
+            print('depth_finalized:{}'.format(depth_finalized))
         else:
             print('No finalization achieved')
         print('supermajority link stats: {}'.format(sml_stats))
@@ -352,5 +375,6 @@ if __name__ == '__main__':
         # Uncomment to have different latencies
         #latencies = [i for i in range(10, 300, 20)] + [500, 750, 1000]
         latencies = [0,50,100,250,500,1000]
+        num_tries = 1
 
-        print_metrics_latency(latencies, validator_set)
+        print_metrics_latency(num_tries,latencies, validator_set)
