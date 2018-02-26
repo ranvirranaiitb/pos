@@ -88,7 +88,7 @@ def is_finalized(validator, hash_):
         vote_count = validator.vote_count[hash_][target_hash]
 
         if (source.height == target.height - EPOCH_SIZE and
-            vote_count > (NUM_VALIDATORS * 2) // 3):
+            vote_count > (NUM_VALIDATORS * SUPER_MAJORITY)):
             return True
 
     return False

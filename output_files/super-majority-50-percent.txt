@@ -1,0 +1,62 @@
+Total height of nodes: 100
+height of connected of nodes: 100
+Latency: 0
+Justified: [1.0, 0.0]
+Finalized: [0.9900990099009885, 2.55351295663786e-15]
+Justified in forks: [0.0, 0.0]
+Main chain size: [501.0, 0.0]
+Blocks under main justified: [501.0, 0.0]
+Delay:[501.0, 99.0]
+Throughput:[499.02, 0.0]
+Main chain fraction: 1.0
+
+Latency: 50
+Justified: [1.0, 0.0]
+Finalized: [0.9885017375033427, 5.198241836978923e-10]
+Justified in forks: [0.0, 0.0]
+Main chain size: [430.85, 0.7274999999790452]
+Blocks under main justified: [499.79, 1.4258999999728985]
+Delay:[1179.6860465116279, 23146.26189832366]
+Throughput:[581.3837209302326, 0.0]
+Main chain fraction: 0.8599800399201597
+
+Latency: 100
+Justified: [1.0, 0.0]
+Finalized: [0.9824561403508768, 1.887379141862766e-15]
+Justified in forks: [0.0, 0.0]
+Main chain size: [281.0, 0.0]
+Blocks under main justified: [496.0, 0.0]
+Delay:[2041.982142857143, 85848.6961096935]
+Throughput:[892.8392857142857, 0.0]
+Main chain fraction: 0.5608782435129741
+
+Latency: 250
+Justified: [0.9642857142857127, 4.3298697960381105e-15]
+Finalized: [0.8928571428571427, 2.3314683517128287e-15]
+Justified in forks: [0.0, 0.0]
+Main chain size: [136.0, 0.0]
+Blocks under main justified: [485.0, 0.0]
+Delay:[4455.84, 294181.49439999834]
+Throughput:[1999.92, 0.0]
+Main chain fraction: 0.2714570858283433
+
+Latency: 500
+Justified: [0.75, 0.0]
+Finalized: [0.5, 0.0]
+Justified in forks: [0.0, 0.0]
+Main chain size: [76.0, 0.0]
+Blocks under main justified: [444.0, 0.0]
+Delay:[8198.285714285714, 411825.3469387889]
+Throughput:[3720.0, 0.0]
+Main chain fraction: 0.15169660678642716
+
+Latency: 1000
+Justified: [0.7005000000000012, 2.47499999984635e-05]
+Finalized: [0.40099999999999925, 9.900000000070963e-05]
+Justified in forks: [0.0, 0.0]
+Main chain size: [45.9, 0.9900000000002365]
+Blocks under main justified: [481.12, 107.60559999998077]
+Delay:[15856.5, 5704769.25]
+Throughput:[11823.75, 0.0]
+Main chain fraction: 0.09161676646706587
+
