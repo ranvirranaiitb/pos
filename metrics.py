@@ -88,7 +88,7 @@ def timing_chain(network):
                 timing_count[i] = timing_count[i] + 1
 
     return np.array(sum_timing), np.array(timing_count)
-
+'''
 def depth_calculator(validator):
     depth_finalized = 0
     num_depth_finalized =0
@@ -100,7 +100,7 @@ def depth_calculator(validator):
         num_depth_finalized = 1
     depth_finalized = (main_chain_size - max_epoch)/EPOCH_SIZE
     return depth_finalized, num_depth_finalized
-
+'''
 
 
 
@@ -254,7 +254,8 @@ def print_metrics_latency(num_tries,latencies, validator_set=VALIDATOR_IDS):
                 squaremcsum += main_chain_size(val)**2
                 busum += blocks_under_highest_justified(val)
                 squarebusum += blocks_under_highest_justified(val)**2
-                temp_depth_finalized, temp_num_depth_finalized = depth_calculator(val)
+                temp_depth_finalized = val.depth_finalized
+                temp_num_depth_finalized = val.num_depth_finalized
                 num_depth_finalized += temp_num_depth_finalized
                 depth_finalized += temp_depth_finalized
 

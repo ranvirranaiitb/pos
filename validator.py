@@ -114,6 +114,10 @@ class VoteValidator(Validator):
         # ex: self.vote_count[source][target] will be between 0 and NUM_VALIDATORS
         self.vote_count = {}
 
+        self.depth_finalized = 0
+        self.num_depth_finalized = 0
+        self.highest_finalized_checkpoint_epoch = 0
+
     # TODO: we could write function is_justified only based on self.processed and self.votes
     #       (note that the votes are also stored in self.processed)
     def is_justified(self, _hash):
@@ -164,6 +168,9 @@ class VoteValidator(Validator):
 
         # We receive the block
         self.processed[block.hash] = block
+
+        self.depth_finalized += block.height - self.highest_finalized_checkpoint_epoch*EPOCH_SIZE
+        self.num_depth_finalized += 1
 
         # If it's an epoch block (in general)
         if block.height % EPOCH_SIZE == 0:
@@ -271,6 +278,26 @@ class VoteValidator(Validator):
                 self.network.report_vote(vote)
                 assert self.processed[target_block.hash]
 
+    def maybe_vote_last_checkpoint_from_vote(self, targethash, targetepoch):
+        #print('vote-on-vote')
+        #input()
+        source_block = self.highest_justified_checkpoint
+
+        if targetepoch>self.current_epoch:
+            assert targetepoch > source_block.epoch, ("target epoch: {},"
+            "source epoch: {}".format(targetepoch, source_block.epoch))
+            self.current_epoch = targetepoch
+            ########DOUBT:Do we need to check ancestry? #############
+            vote = Vote(source_block.hash,
+                        targethash,
+                        source_block.epoch,
+                        targetepoch,
+                        self.id)
+            self.network.broadcast(vote)
+            self.network.report_vote(vote)
+
+
+
     def accept_vote(self, vote, sml_stats = {}):
         """Called on receiving a vote message.
         """
@@ -281,6 +308,12 @@ class VoteValidator(Validator):
         if vote.source not in self.processed:
             self.add_dependency(vote.source, vote)
 
+        if vote.source not in self.vote_count:
+            self.vote_count[vote.source] = {}
+
+        if(self.vote_count[vote.source].get(vote.target, 0) >=1 ):
+            self.maybe_vote_last_checkpoint_from_vote(vote.source,vote.epoch_source)
+            self.maybe_vote_last_checkpoint_from_vote(vote.target,vote.epoch_target)        
         # Check that the source is processed and justified
         # TODO: If the source is not justified, add to dependencies?
         #******************************ADD DEPENDENCIES HERE************************************
@@ -336,6 +369,10 @@ class VoteValidator(Validator):
         # TODO: we do not deal with finalized dynasties (the pool of validator
         # is always the same right now)
         # If there are enough votes, process them
+
+
+
+
         if (self.vote_count[vote.source][vote.target] > (NUM_VALIDATORS * SUPER_MAJORITY)):
             # Mark the target as justified
             try:
@@ -356,6 +393,8 @@ class VoteValidator(Validator):
             # If the source was a direct parent of the target, the source
             # is finalized
             if vote.epoch_source == vote.epoch_target - 1:
+                if vote.epoch_source>self.highest_finalized_checkpoint_epoch:
+                    self.highest_finalized_checkpoint_epoch = vote.epoch_source
                 self.finalized.add(vote.source)
                 self.network.report_finalized(vote.source,self.id)
         return True
