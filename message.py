@@ -18,3 +18,5 @@ class Vote():
         self.epoch_source = epoch_source
         self.epoch_target = epoch_target
         self.sender = sender
+
+#Test changes
