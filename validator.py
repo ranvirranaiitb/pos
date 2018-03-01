@@ -345,7 +345,7 @@ class VoteValidator(Validator):
         # If there are enough votes, process them
         if (self.vote_count[vote.source][vote.target] > (NUM_VALIDATORS * SUPER_MAJORITY)):
             # Mark the target as justified
-            try:
+            try:                    ####!!!!!!!!!!!!!!!!WRONG DEFINITION****************
                 sml_stats[vote.epoch_target - vote.epoch_source] += 1
             except KeyError:
                 sml_stats[vote.epoch_target - vote.epoch_source ] = 1
