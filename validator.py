@@ -35,6 +35,7 @@ class Validator(object):
         self.tail_membership = {ROOT.hash: ROOT.hash}
         self.id = id
         self.network.report_proposal(ROOT)
+        self.blocks_received = {ROOT.hash}
 
     # If we processed an object but did not receive some dependencies
     # needed to process it, save it to be processed later
@@ -114,6 +115,7 @@ class VoteValidator(Validator):
         # ex: self.vote_count[source][target] will be between 0 and NUM_VALIDATORS
         self.vote_count = {}
 
+        self.vote_count_premature = {}
         self.depth_finalized = 0
         self.num_depth_finalized = 0
         self.highest_finalized_checkpoint_epoch = 0
@@ -162,6 +164,7 @@ class VoteValidator(Validator):
             True if block was accepted or False if we are missing dependencies
         """
         # If we didn't receive the block's parent yet, wait
+        self.blocks_received.add(block.hash)
         if block.prev_hash not in self.processed:
             self.add_dependency(block.prev_hash, block)
             return False
@@ -283,11 +286,13 @@ class VoteValidator(Validator):
         #input()
         source_block = self.highest_justified_checkpoint
 
+
+
         if targetepoch>self.current_epoch:
             assert targetepoch > source_block.epoch, ("target epoch: {},"
             "source epoch: {}".format(targetepoch, source_block.epoch))
             self.current_epoch = targetepoch
-            ########DOUBT:Do we need to check ancestry? #############
+            ########DOUBT:Do we need to check ancestry? ############# NEED TO DO THAT, THIS IS A BUG
             vote = Vote(source_block.hash,
                         targethash,
                         source_block.epoch,
@@ -305,15 +310,31 @@ class VoteValidator(Validator):
               # prepare.blockhash, vote.blockhash in self.processed)
 
        # If the block has not yet been processed, wait
+
+        if vote.source not in self.vote_count_premature:
+            self.vote_count_premature[vote.source] = {}
+        self.vote_count_premature[vote.source][vote.target] = self.vote_count_premature[vote.source].get(vote.target,0) + 1
+
+           
+        if(self.vote_count_premature[vote.source].get(vote.target, 0) >=1 ):
+            if  vote.source not in self.processed:
+                if vote.source not in self.blocks_received:
+                    self.accept_block(self.network.processed[vote.source])    
+            if  vote.target not in self.processed:
+                if vote.target not in self.blocks_received:
+                    self.accept_block(self.network.processed[vote.target])
+
         if vote.source not in self.processed:
             self.add_dependency(vote.source, vote)
 
         if vote.source not in self.vote_count:
             self.vote_count[vote.source] = {}
 
-        if(self.vote_count[vote.source].get(vote.target, 0) >=1 ):
+
+            '''        
             self.maybe_vote_last_checkpoint_from_vote(vote.source,vote.epoch_source)
             self.maybe_vote_last_checkpoint_from_vote(vote.target,vote.epoch_target)        
+            '''
         # Check that the source is processed and justified
         # TODO: If the source is not justified, add to dependencies?
         #******************************ADD DEPENDENCIES HERE************************************
