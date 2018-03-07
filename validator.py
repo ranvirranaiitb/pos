@@ -97,13 +97,16 @@ class VoteValidator(Validator):
         # justified checkpoint
         self.head = ROOT
         self.highest_justified_checkpoint = ROOT
+        self.highest_semi_justified_checkpoint = ROOT
         self.main_chain_size = 0
 
         # Set of justified block hashes
         self.justified = {ROOT.hash}
+        self.semi_justified = {ROOT.hash}
 
         # Set of finalized block hashes
         self.finalized = {ROOT.hash}
+
 
         # Map {sender -> votes}
         # Contains all the votes, and allow us to see who voted for whom
@@ -117,6 +120,9 @@ class VoteValidator(Validator):
         self.depth_finalized = 0
         self.num_depth_finalized = 0
         self.highest_finalized_checkpoint_epoch = 0
+        self.deadlock_correction = False
+        self.deadlock_threshold=10
+        self.num_deadlocks = 0
 
     # TODO: we could write function is_justified only based on self.processed and self.votes
     #       (note that the votes are also stored in self.processed)
@@ -205,7 +211,16 @@ class VoteValidator(Validator):
             block: latest block processed."""
 
         # we are on the right chain, the head is simply the latest block
-        if self.is_ancestor(self.highest_justified_checkpoint,
+        
+        self.check_deadlock()
+        if self.highest_semi_justified_checkpoint.height <= self.highest_justified_checkpoint.height or self.deadlock_correction:
+            source_block = self.highest_justified_checkpoint
+        else:
+            source_block = self.highest_semi_justified_checkpoint
+        self.recheck_deadlock()    
+
+
+        if self.is_ancestor(source_block,
                             self.tail_membership[block.hash]):
         	if self.head.height < block.height:
         		self.head = block
@@ -217,12 +232,12 @@ class VoteValidator(Validator):
             # and set it as head
             # print('Wrong chain, reset the chain to be a descendant of the '
                   # 'highest justified checkpoint.')
-            max_height = self.highest_justified_checkpoint.height
-            max_descendant = self.highest_justified_checkpoint.hash
+            max_height = source_block.height
+            max_descendant = source_block.hash
             for _hash in self.tails:
                 # if the tail is descendant to the highest justified checkpoint
                 # TODO: bug with is_ancestor? see higher
-                if self.is_ancestor(self.highest_justified_checkpoint, _hash):
+                if self.is_ancestor(source_block, _hash):
                     new_height = self.processed[_hash].height
                     if new_height > max_height:
                         max_height = new_height
@@ -230,6 +245,15 @@ class VoteValidator(Validator):
 
             self.main_chain_size = max_height
             self.head = self.processed[max_descendant]
+
+    def check_deadlock(self):
+        if self.highest_semi_justified_checkpoint.height - self.highest_justified_checkpoint.height>= self.deadlock_threshold:
+            self.deadlock_correction = True
+            self.num_deadlocks += 1
+
+    def recheck_deadlock(self):
+        if self.highest_semi_justified_checkpoint.height - self.highest_justified_checkpoint.height== self.deadlock_threshold:
+            self.deadlock_correction = False            
 
     def maybe_vote_last_checkpoint(self, block):
         """Called after receiving a block.
@@ -248,7 +272,14 @@ class VoteValidator(Validator):
         # BNO: The target will be block (which is a checkpoint)
         target_block = block
         # BNO: The source will be the justified checkpoint of greatest height
-        source_block = self.highest_justified_checkpoint
+
+
+        self.check_deadlock()
+        if self.highest_semi_justified_checkpoint.height <= self.highest_justified_checkpoint.height or self.deadlock_correction:
+            source_block = self.highest_justified_checkpoint
+        else:
+            source_block = self.highest_semi_justified_checkpoint
+        self.recheck_deadlock()    
 
 
         # If the block is an epoch block of a higher epoch than what we've seen so far
@@ -291,6 +322,9 @@ class VoteValidator(Validator):
         # Check that the source is processed and justified
         # TODO: If the source is not justified, add to dependencies?
         #******************************ADD DEPENDENCIES HERE************************************
+
+        if vote_source not in self.semi_justified:
+            pass
 
         if vote.source not in self.justified:
             self.add_justification_dependency(vote.source,vote)  ##########
@@ -343,6 +377,16 @@ class VoteValidator(Validator):
         # TODO: we do not deal with finalized dynasties (the pool of validator
         # is always the same right now)
         # If there are enough votes, process them
+        ###SEMI_JUSTIFICATION#########
+        vote_source_count = 0
+        for targethash in self.vote_count[vote.source]:
+            vote_source_count+=self.vote_count[vote.source][targethash]
+
+        if(self.vote_count[vote.source][vote.target]>vote_source_count*3/4) and (vote_source_count>20):
+            self.semi_justified.add(vote.target)
+            if vote.epoch_target > self.highest_semi_justified_checkpoint.epoch:
+                self.highest_semi_justified_checkpoint = self.processed[vote.target]
+        ###-----------------##        
         if (self.vote_count[vote.source][vote.target] > (NUM_VALIDATORS * SUPER_MAJORITY)):
             # Mark the target as justified
             try:                    ####!!!!!!!!!!!!!!!!WRONG DEFINITION****************

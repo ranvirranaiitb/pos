@@ -232,6 +232,7 @@ def print_metrics_latency(num_tries,latencies, validator_set=VALIDATOR_IDS):
         sml_stats = {}
         depth_finalized = 0
         num_depth_finalized = 0
+        total_deadlocks = 0
         #fcsum = {}
 
         for i in range(num_tries):
@@ -260,6 +261,7 @@ def print_metrics_latency(num_tries,latencies, validator_set=VALIDATOR_IDS):
                 temp_num_depth_finalized = val.num_depth_finalized
                 num_depth_finalized += temp_num_depth_finalized
                 depth_finalized += temp_depth_finalized
+                total_deadlocks += val.num_deadlocks
 
                 #fc = count_forks(val)
                 #for l in fc.keys():
@@ -347,7 +349,9 @@ def print_metrics_latency(num_tries,latencies, validator_set=VALIDATOR_IDS):
         else:
             print('No finalization achieved')
         print('supermajority link stats: {}'.format(sml_stats))
+        print('Num deadlocks: {}'.format(total_deadlocks))
         print('')
+
 
 
 if __name__ == '__main__':
