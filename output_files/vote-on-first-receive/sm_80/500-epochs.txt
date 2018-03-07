@@ -1,0 +1,131 @@
+``````````````````
+running test
+            NUM_EPOCH: 500
+            SUPER_MAJORITY: 0.8
+            NUM_VALIDATORS: 100
+``````````````````
+height of connected of nodes: 100
+[500.0, 500.0, 500.0, 500.0]
+=== Statistics ===
+Latency: 0
+Timing: [  0.    1.    2.    2.  499.8 500.8 501.8 501.8]
+Bar_graph: [1.0, 1.0, 497.8, 1.0, 1.0, 0.0]
+Justified in forks: [0.0, 0.0]
+Main chain size (root included): [2501.0, 0.0]
+Main chain fraction:[1.0, 0.0]
+Probability of death: 0.0
+Blocks under main justified: [2501.0, 0.0]
+finalization_quartiles:[[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
+---old, ignoring dead blocks---
+Delay:[500.8, 19.95999999999185]
+Throughput:[0.001996790729128735, 0.0]
+depth_finalized:7.99
+---new, incld. dead blocks---
+Delay:500.59976009596164
+Throughput:0.001997589445420386
+supermajority link stats: {1: 500}
+=== END === 
+[444.0, 444.0, 444.0, 444.0]
+=== Statistics ===
+Latency: 50
+Timing: [  0.           4.34988713  72.8013544   92.03611738 562.16216216
+ 566.51126126 634.94369369 654.17567568]
+Bar_graph: [4.349887133182844, 68.45146726862302, 489.36080776035635, 4.349099099099021, 68.4324324324325, 19.231981981981903]
+Justified in forks: [0.0, 0.0]
+Main chain size (root included): [2221.0, 0.0]
+Main chain fraction:[0.8880447820871651, 0.0]
+Probability of death: 0.11195521791283491
+Blocks under main justified: [2498.0, 0.0]
+finalization_quartiles:[[11.126126126126126, 14.81981981981982, 17.256756756756758, 19.23198198198198], [3.244863209035703, 3.3381448108711353, 3.3867553799906682, 3.4559994368899276]]
+---old, ignoring dead blocks---
+Delay:[566.5112612612612, 5760.0021254362655]
+Throughput:[0.001774811301100944, 0.0]
+depth_finalized:7.951785107106426
+---new, incld. dead blocks---
+Delay:637.6758906587812
+Throughput:0.0015767423598980785
+supermajority link stats: {1: 444}
+=== END === 
+[352.0, 352.0, 352.0, 352.0]
+=== Statistics ===
+Latency: 100
+Timing: [  0.           9.52706553 176.03988604 216.70940171 709.375
+ 718.89488636 885.31818182 926.01704545]
+Bar_graph: [9.527065527065528, 166.5128205128205, 533.335113960114, 9.519886363636374, 166.4232954545455, 40.698863636363626]
+Justified in forks: [0.0, 0.0]
+Main chain size (root included): [1760.95, 0.49749371814146365]
+Main chain fraction:[0.7040983606557377, 0.00019899748725658544]
+Probability of death: 0.2959016393442623
+Blocks under main justified: [2499.9, 0.5299999993294477]
+finalization_quartiles:[[23.713068181818183, 31.360795454545453, 36.57954545454545, 40.69886363636363], [7.004872469469584, 7.620467911187211, 7.812026845176096, 8.041101721188227]]
+---old, ignoring dead blocks---
+Delay:[718.8948863636364, 16111.28156475973]
+Throughput:[0.001405647418774804, 0.0]
+depth_finalized:8.29387831847786
+---new, incld. dead blocks---
+Delay:1020.6066134240557
+Throughput:0.0009901099288365965
+supermajority link stats: {1: 352}
+=== END === 
+[136.0, 136.0, 136.0, 136.0]
+=== Statistics ===
+Latency: 250
+Timing: [5.20231214e-02 6.89421965e+01 5.51080925e+02 6.80630058e+02
+ 1.11173563e+03 1.19712644e+03 1.65346324e+03 1.78345588e+03]
+Bar_graph: [68.94219653179191, 482.13872832369935, 560.6547073284169, 85.39080459770116, 456.33679851250827, 129.99264705882365]
+Justified in forks: [0.0, 0.0]
+Main chain size (root included): [1110.95, 0.49749371837546724]
+Main chain fraction:[0.44420231907237107, 0.00019899748735018692]
+Probability of death: 0.5557976809276289
+Blocks under main justified: [2489.87, 1.6731000002473593]
+finalization_quartiles:[[73.08088235294117, 97.83088235294117, 115.11764705882354, 129.99264705882354], [31.014004224623797, 41.72027916180691, 50.80572264309599, 60.08480481339407]]
+---old, ignoring dead blocks---
+Delay:[1197.1264367816093, 36165.63918615389]
+Throughput:[0.0008890882440106691, 0.0]
+depth_finalized:14.303292144819137
+---new, incld. dead blocks---
+Delay:2693.9251018983964
+Throughput:0.0003950930338734611
+supermajority link stats: {1: 136, 2: 32, 3: 6, 4: 1}
+=== END === 
+[9.0, 9.0, 9.0, 9.0]
+=== Statistics ===
+Latency: 500
+Timing: [   0.          230.32142857 1283.89285714 1575.46428571 1847.10344828
+ 2249.20689655 3332.22222222 3765.88888889]
+Bar_graph: [230.32142857142858, 1053.5714285714284, 563.210591133005, 402.1034482758621, 1083.015325670498, 433.6666666666665]
+Justified in forks: [0.0, 0.0]
+Main chain size (root included): [652.7, 127.07324659423787]
+Main chain fraction:[0.26097560975609757, 0.05082929863769515]
+Probability of death: 0.7390243902439024
+Blocks under main justified: [2305.76, 202739.46239999868]
+finalization_quartiles:[[237.66666666666666, 325.3333333333333, 386.6666666666667, 433.6666666666667], [115.84088704387206, 163.24079010944408, 194.25298510504857, 223.4392783534513]]
+---old, ignoring dead blocks---
+Delay:[2249.206896551724, 169274.9916765755]
+Throughput:[0.000562989342480819, 0.0]
+depth_finalized:57.28642287939759
+---new, incld. dead blocks---
+Delay:8615.010328449993
+Throughput:0.00014698525753489226
+supermajority link stats: {1: 9, 2: 13, 3: 8, 4: 6, 5: 1, 6: 2, 7: 2, 10: 1, 12: 1}
+=== END === 
+[0.0, 0.0, 0.0, 0.0]
+=== Statistics ===
+Latency: 1000
+Timing: [  nan   nan   nan   nan 1900. 2837.   nan   nan]
+Bar_graph: [nan, nan, nan, 937.0, nan, nan]
+Justified in forks: [0.0, 0.0]
+Main chain size (root included): [337.9, 21.700000000000323]
+Main chain fraction:[0.1351059576169532, 0.008680000000000129]
+Probability of death: 0.8648940423830468
+Blocks under main justified: [1793.7, 13384.290000000037]
+finalization_quartiles:[[None, None, None, None], [None, None, None, None]]
+---old, ignoring dead blocks---
+Delay:[2837.0, 0.0]
+Throughput:[0.0, 0.0]
+depth_finalized:231.204723411389
+---new, incld. dead blocks---
+Delay:20989.937851435334
+Throughput:0.0
+supermajority link stats: {37: 1, 31: 1}
+=== END === 
