@@ -1,4 +1,6 @@
 from parameters import *
+import numpy as np
+from custom_functions import var_majority
 
 class Network(object):
     """Networking layer controlling the delivery of messages between nodes.
@@ -86,7 +88,7 @@ class Network(object):
                 if vote.source not in self.first_finalization_time_auxillary:
                     self.first_finalization_time_auxillary[vote.source] = {}
                 self.first_finalization_time_auxillary[vote.source][vote.target] = self.time - self.first_proposal_time[vote.source]
-        if self.vote_count[vote.source][vote.target] == (NUM_VALIDATORS*2)//3 + 1:
+        if self.vote_count[vote.source][vote.target] == (np.ceil(NUM_VALIDATORS*var_majority(vote.epoch_target - vote.epoch_source, sm_variation_str))  ):
             if vote.source not in self.supermajority_link:
                 self.supermajority_link[vote.source] = []           ##In this function we assume all validators are honest, hence no checking condition
             self.supermajority_link[vote.source].append(vote.target) # if there is a vote from vote.source, it mean it was justified

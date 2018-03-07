@@ -1,13 +1,14 @@
 import os
 import numpy as np
 
+
 from parameters import *
 from block import Block
 from utils import exponential_latency
 from network import Network
 from validator import VoteValidator
 from plot_graph import plot_node_blockchains
-
+from tqdm import tqdm
 
 
 def fraction_justified_and_finalized(validator):
@@ -52,7 +53,7 @@ def delay_throughput(network):
         Edelay = Edelay
         E2delay = E2delay
     min_time = BLOCK_PROPOSAL_TIME*EPOCH_SIZE*NUM_EPOCH
-    max_time = 0
+    max_time = 1
     max_epoch=0
     for block_hash in network.global_finalized_time_absolute:
         if(network.global_finalized_time_absolute[block_hash]>=max_time):
@@ -65,10 +66,12 @@ def delay_throughput(network):
             max_epoch = (network.processed[block_hash].height)/EPOCH_SIZE
 
     if len(network.global_finalized_time)>0:
-        throughput = max_epoch/(max_time - min_time)
+        throughput = max_epoch/(max_time)       #Removed min_time
     else:
         throughput = 0  #max_time - min_time 
+
     return Edelay, E2delay, throughput, len(network.global_finalized_time)
+
 
 def timing_chain(network):
     timing = {}
@@ -216,12 +219,15 @@ def print_metrics_latency(latencies, num_tries, validator_set=VALIDATOR_IDS):
         Etiming = np.zeros((8))
         timing_count = np.zeros((8))
         sml_stats = {}
+        depth_finalized = 0
+        num_depth_finalized = 0
         #fcsum = {}
+
         for i in range(num_tries):
             network = Network(exponential_latency(latency))
             validators = [VoteValidator(network, i) for i in validator_set]
 
-            for t in range(BLOCK_PROPOSAL_TIME * EPOCH_SIZE * NUM_EPOCH):
+            for t in tqdm(range(BLOCK_PROPOSAL_TIME * EPOCH_SIZE * NUM_EPOCH)):
                 network.tick(sml_stats)
                 # if t % (BLOCK_PROPOSAL_TIME * EPOCH_SIZE) == 0:
                 #     filename = os.path.join(LOG_DIR, 'plot_{:03d}.png'.format(t))
@@ -239,6 +245,11 @@ def print_metrics_latency(latencies, num_tries, validator_set=VALIDATOR_IDS):
                 squaremcsum += main_chain_size(val)**2
                 busum += blocks_under_highest_justified(val)
                 squarebusum += blocks_under_highest_justified(val)**2
+                temp_depth_finalized = val.depth_finalized
+                temp_num_depth_finalized = val.num_depth_finalized
+                num_depth_finalized += temp_num_depth_finalized
+                depth_finalized += temp_depth_finalized
+
                 #fc = count_forks(val)
                 #for l in fc.keys():
                     #fcsum[l] = fcsum.get(l, 0) + fc[l]
@@ -285,48 +296,47 @@ def print_metrics_latency(latencies, num_tries, validator_set=VALIDATOR_IDS):
                 stdquartiles[i] = None
 
 
-        Ejf = jfsum/len(validators)/num_tries
-        E2jf = squarejfsum/len(validators)/num_tries
-        Ejff = jffsum/len(validators)/num_tries
-        E2jff = squarejffsum/len(validators)/num_tries
-        Eff = ffsum/len(validators)/num_tries
-        E2ff = squareffsum/len(validators)/num_tries
-        Emc = mcsum/len(validators)/num_tries
-        E2mc = squaremcsum/len(validators)/num_tries
-        Ebu = busum/len(validators)/num_tries
-        E2bu = squarebusum/len(validators)/num_tries
+        Ejf = jfsum/len(validators)
+        E2jf = squarejfsum/len(validators)
+        Ejff = jffsum/len(validators)
+        E2jff = squarejffsum/len(validators)
+        Eff = ffsum/len(validators)
+        E2ff = squareffsum/len(validators)
+        Emc = mcsum/len(validators)
+        E2mc = squaremcsum/len(validators)
+        Ebu = busum/len(validators)
+        E2bu = squarebusum/len(validators)
         varjf = E2jf - Ejf**2
         varjff = E2jff - Ejff**2
         varff = E2ff - Eff**2
         varmc = E2mc - Emc**2
         varbu = E2bu - Ebu**2
 
+        depth_finalized = depth_finalized/num_depth_finalized
+
         Etiming = Etiming/timing_count
 
         print('Latency: {}'.format(latency))
         print('Timing: {}'.format(Etiming))
-        print('Bar_graph: {}'.format([Etiming[1],(Etiming[2]-Etiming[1]),(Etiming[4]-Etiming[2]),(Etiming[5]-Etiming[4]),(Etiming[6]-Etiming[5]),(Etiming[7]-Etiming[6])]))
+        print('Bar_graph: {}'.format([Etiming[1], (Etiming[2]-Etiming[1]),
+                            (Etiming[4]-Etiming[2]),(Etiming[5]-Etiming[4]),
+                            (Etiming[6]-Etiming[5]),(Etiming[7]-Etiming[6])]))
         #print('Justified: {}'.format([Ejf,varjf]))
         #print('Finalized: {}'.format([Eff,varff]))
         print('Justified in forks: {}'.format([Ejff,np.sqrt(varjff)]))
         print('Main chain size: {}'.format([Emc,np.sqrt(varmc)]))
-        print('Main chain fraction:{}'.format([Emc/EPOCH_SIZE/NUM_EPOCH, np.sqrt(varmc)/EPOCH_SIZE/NUM_EPOCH ]))
+        print('Main chain fraction:{}'.format([Emc/EPOCH_SIZE/NUM_EPOCH,
+                            np.sqrt(varmc)/EPOCH_SIZE/NUM_EPOCH ]))
         print('Blocks under main justified: {}'.format([Ebu,varbu]))
         print('finalization_quartiles:{}'.format([Equartiles,stdquartiles]))
         if finalization_achieved :
             print('Delay:{}'.format([Edelay,vardelay]))
             print('Throughput:{}'.format([Ethroughput,varthroughput]))
+            print('depth_finalized:{}'.format(depth_finalized))
         else:
             print('No finalization achieved')
-        #print('Main chain fraction: {}'.format(
-        #    mcsum / (len(validators) * num_tries * (EPOCH_SIZE * NUM_EPOCH + 1))))
-        #for l in sorted(fcsum.keys()):
-            #if l > 0:
-                #frac = float(fcsum[l]) / float(fcsum[0])
-                #print('Fraction of forks of size {}: {}'.format(l, frac))
         print('supermajority link stats: {}'.format(sml_stats))
         print('')
-
 
 if __name__ == '__main__':
     LOG_DIR = 'metrics'
@@ -336,6 +346,17 @@ if __name__ == '__main__':
     # Uncomment to have fractions of disconnected nodes
     # fractions = np.arange(0.0, 0.4, 0.05)
     # fractions = [0.31, 0.32, 0.33]
+
+    print('``````````````````')
+    print("""running test
+            NUM_EPOCH: {}
+            VAR_MAJORITY: {}
+            alpha: {}""".
+            format(NUM_EPOCH,
+                    sm_variation_str,
+                    0.6))
+    print('``````````````````')
+
     fractions = [0.0]
     for fraction_disconnected in fractions:
         num_validators = int((1.0 - fraction_disconnected) * NUM_VALIDATORS)

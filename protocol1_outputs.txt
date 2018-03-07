@@ -1,0 +1,200 @@
+(py36) wirelessprv-10-195-119-91:protocol1 ranvirrana$ python3 metrics.py 
+``````````````````
+running test
+            NUM_EPOCH: 300
+            VAR_MAJORITY: increasing
+            alpha: 0.6
+``````````````````
+Total height of nodes: 100
+height of connected of nodes: 100
+100%|██████████████████████████████████| 150000/150000 [04:06<00:00, 609.49it/s]
+[300.0, 300.0, 300.0, 300.0]
+Latency: 0
+Timing: [   0.            1.            2.            2.          499.66666667
+  500.66666667  501.66666667  501.66666667]
+Bar_graph: [1.0, 1.0, 497.66666666666669, 1.0, 1.0, 0.0]
+Justified in forks: [0.0, 0.0]
+Main chain size: [1501.0, 0.0]
+Main chain fraction:[1.0006666666666666, 0.0]
+Blocks under main justified: [1501.0, 0.0]
+finalization_quartiles:[[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
+Delay:[500.6666666666667, 33.22222222221899]
+Throughput:[0.001994649802202787, 0.0]
+depth_finalized:7.983333333333333
+supermajority link stats: {1: 900000}
+
+100%|██████████████████████████████████| 150000/150000 [04:12<00:00, 594.25it/s]
+[259.0, 259.0, 259.0, 259.0]
+Latency: 50
+Timing: [   0.           63.78294574  107.85658915  124.70542636  577.22007722
+  640.99227799  685.05019305  701.8996139 ]
+Bar_graph: [63.782945736434108, 44.073643410852718, 469.36348807279035, 63.77220077220079, 44.057915057915011, 16.849420849420881]
+Justified in forks: [0.0, 0.0]
+Main chain size: [1296.0, 0.0]
+Main chain fraction:[0.864, 0.0]
+Blocks under main justified: [1497.0, 0.0]
+finalization_quartiles:[[9.961389961389962, 13.03088803088803, 15.177606177606178, 16.84942084942085], [2.9036083925610465, 3.1779603568852113, 3.2843551671841036, 3.3881051372915518]]
+Delay:[640.992277992278, 6211.953608324286]
+Throughput:[0.0017250486423599734, 0.0]
+depth_finalized:8.189242350493743
+supermajority link stats: {1: 755997}
+
+100%|██████████████████████████████████| 150000/150000 [02:38<00:00, 946.56it/s]
+[187.0, 187.0, 187.0, 187.0]
+Latency: 100
+Timing: [    0.           145.53763441   238.41935484   282.16129032   797.32620321
+   942.84491979  1035.68983957  1079.4171123 ]
+Bar_graph: [145.53763440860214, 92.881720430107521, 558.90684836984656, 145.51871657754009, 92.844919786096284, 43.727272727272748]
+Justified in forks: [0.0, 0.0]
+Main chain size: [936.0, 0.0]
+Main chain fraction:[0.624, 0.0]
+Blocks under main justified: [1493.0, 0.0]
+finalization_quartiles:[[24.6524064171123, 32.86096256684492, 38.7379679144385, 43.72727272727273], [12.359673605816287, 17.006507880908757, 20.930514073955287, 25.226788548612802]]
+Delay:[942.8449197860963, 29666.344934084453]
+Throughput:[0.001246297959019579, 0.0]
+depth_finalized:8.36216717357665
+supermajority link stats: {1: 435890}
+
+100%|█████████████████████████████████| 150000/150000 [01:07<00:00, 2221.64it/s]
+[1.0, 1.0, 1.0, 1.0]
+Latency: 250
+Timing: [    0.   787.  1030.  1191.  1149.  1741.  2011.  2147.]
+Bar_graph: [787.0, 243.0, 119.0, 592.0, 270.0, 136.0]
+Justified in forks: [0.0, 0.0]
+Main chain size: [596.0, 0.0]
+Main chain fraction:[0.3973333333333333, 0.0]
+Blocks under main justified: [1434.0, 0.0]
+finalization_quartiles:[[85.0, 109.0, 125.0, 136.0], [0.0, 0.0, 0.0, 0.0]]
+Delay:[1741.0, 0.0]
+Throughput:[0.0008055637603716334, 0.0]
+depth_finalized:198.60004273475738
+supermajority link stats: {2: 2100, 8: 100, 11: 100, 5: 300, 1: 1100, 10: 100, 18: 100, 7: 100, 23: 200}
+
+100%|█████████████████████████████████| 150000/150000 [00:45<00:00, 3298.68it/s]
+[0.0, 0.0, 0.0, 0.0]
+metrics.py:317: RuntimeWarning: invalid value encountered in true_divide
+  Etiming = Etiming/timing_count
+Latency: 500
+Timing: [ nan  nan  nan  nan  nan  nan  nan  nan]
+Bar_graph: [nan, nan, nan, nan, nan, nan]
+Justified in forks: [0.0, 0.0]
+Main chain size: [196.0, 0.0]
+Main chain fraction:[0.13066666666666668, 0.0]
+Blocks under main justified: [722.0, 0.0]
+finalization_quartiles:[[None, None, None, None], [None, None, None, None]]
+No finalization achieved
+supermajority link stats: {39: 100}
+
+100%|█████████████████████████████████| 150000/150000 [00:28<00:00, 5212.63it/s]
+[0.0, 0.0, 0.0, 0.0]
+Latency: 1000
+Timing: [ nan  nan  nan  nan  nan  nan  nan  nan]
+Bar_graph: [nan, nan, nan, nan, nan, nan]
+Justified in forks: [0.0, 0.0]
+Main chain size: [1.0, 0.0]
+Main chain fraction:[0.0006666666666666668, 0.0]
+Blocks under main justified: [1.0, 0.0]
+finalization_quartiles:[[None, None, None, None], [None, None, None, None]]
+No finalization achieved
+supermajority link stats: {}
+
+(py36) wirelessprv-10-195-119-91:protocol1 ranvirrana$ python3 metrics.py 
+``````````````````
+running test
+            NUM_EPOCH: 300
+            VAR_MAJORITY: decreasing
+            alpha: 0.6
+``````````````````
+Total height of nodes: 100
+height of connected of nodes: 100
+100%|██████████████████████████████████| 150000/150000 [04:08<00:00, 604.35it/s]
+[300.0, 300.0, 300.0, 300.0]
+Latency: 0
+Timing: [   0.            1.            2.            2.          499.66666667
+  500.66666667  501.66666667  501.66666667]
+Bar_graph: [1.0, 1.0, 497.66666666666669, 1.0, 1.0, 0.0]
+Justified in forks: [0.0, 0.0]
+Main chain size: [1501.0, 0.0]
+Main chain fraction:[1.0006666666666666, 0.0]
+Blocks under main justified: [1501.0, 0.0]
+finalization_quartiles:[[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
+Delay:[500.6666666666667, 33.22222222221899]
+Throughput:[0.001994649802202787, 0.0]
+depth_finalized:7.983333333333333
+supermajority link stats: {1: 600000}
+
+100%|██████████████████████████████████| 150000/150000 [04:14<00:00, 588.72it/s]
+[254.0, 254.0, 254.0, 254.0]
+Latency: 50
+Timing: [   0.           83.41106719  131.61264822  153.71936759  589.76377953
+  673.15354331  721.31102362  743.42913386]
+Bar_graph: [83.411067193675891, 48.201581027667984, 458.15113130621523, 83.38976377952747, 48.157480314960708, 22.118110236220446]
+Justified in forks: [0.0, 0.0]
+Main chain size: [1270.95, 0.49749371837546724]
+Main chain fraction:[0.8472999999999999, 0.00033166247891697816]
+Blocks under main justified: [1499.94, 0.35639999993145466]
+finalization_quartiles:[[12.88976377952756, 17.062992125984252, 19.866141732283463, 22.118110236220474], [3.8387340975585884, 4.2708461082381524, 4.4454031901751199, 4.6704198553923559]]
+Delay:[673.1535433070866, 9376.381936263933]
+Throughput:[0.001688039605545844, 0.0]
+depth_finalized:8.349861322239112
+supermajority link stats: {1: 477354}
+
+100%|██████████████████████████████████| 150000/150000 [02:39<00:00, 942.65it/s]
+[143.0, 143.0, 143.0, 143.0]
+Latency: 100
+Timing: [    0.           191.29452055   290.05479452   367.05479452   763.94557823
+   972.02721088  1067.65734266  1160.62937063]
+Bar_graph: [191.29452054794521, 98.760273972602732, 473.89078371074459, 208.08163265306121, 95.630131772988989, 92.972027972027945]
+Justified in forks: [0.0, 0.0]
+Main chain size: [956.0, 0.0]
+Main chain fraction:[0.6373333333333333, 0.0]
+Blocks under main justified: [1496.0, 0.0]
+finalization_quartiles:[[36.35664335664335, 51.02097902097902, 63.61538461538461, 92.97202797202797], [26.005756650071461, 40.461752384622748, 58.037355112792952, 144.35586099005829]]
+Delay:[972.0272108843537, 24128.25776296924]
+Throughput:[0.0012702572605230785, 0.0]
+depth_finalized:11.543281033194578
+supermajority link stats: {1: 207989, 2: 65100}
+
+100%|█████████████████████████████████| 150000/150000 [01:15<00:00, 1981.93it/s]
+[18.0, 18.0, 18.0, 18.0]
+Latency: 250
+Timing: [  1.16666667e+00   4.53055556e+02   6.89222222e+02   8.45388889e+02
+   1.27894444e+03   1.87788889e+03   2.12977778e+03   2.38066667e+03]
+Bar_graph: [453.05555555555554, 236.16666666666663, 589.72222222222217, 598.94444444444457, 251.88888888888891, 250.88888888888869]
+Justified in forks: [0.0, 0.0]
+Main chain size: [585.9, 0.69999999999334772]
+Main chain fraction:[0.3906, 0.00046666666666223184]
+Blocks under main justified: [1489.7, 3.3299999996088445]
+finalization_quartiles:[[111.88888888888889, 160.05555555555554, 201.83333333333334, 250.88888888888889], [64.424709621980796, 100.10853677785163, 153.29610055198549, 248.72449928225782]]
+Delay:[1877.888888888889, 110890.43209876539]
+Throughput:[0.0007776049766718507, 0.0]
+depth_finalized:34.698142818028224
+supermajority link stats: {3: 16195, 1: 21090, 2: 41800}
+
+100%|█████████████████████████████████| 150000/150000 [00:44<00:00, 3408.26it/s]
+[0.0, 0.0, 0.0, 0.0]
+metrics.py:317: RuntimeWarning: invalid value encountered in true_divide
+  Etiming = Etiming/timing_count
+Latency: 500
+Timing: [ nan  nan  nan  nan  nan  nan  nan  nan]
+Bar_graph: [nan, nan, nan, nan, nan, nan]
+Justified in forks: [0.0, 0.0]
+Main chain size: [380.7, 2.9849623113204449]
+Main chain fraction:[0.2538, 0.0019899748742136301]
+Blocks under main justified: [1478.56, 183.00640000030398]
+finalization_quartiles:[[None, None, None, None], [None, None, None, None]]
+No finalization achieved
+supermajority link stats: {5: 6100, 2: 4700, 7: 1100, 4: 6500, 3: 400, 6: 2151}
+
+100%|█████████████████████████████████| 150000/150000 [00:24<00:00, 6151.49it/s]
+[0.0, 0.0, 0.0, 0.0]
+Latency: 1000
+Timing: [ nan  nan  nan  nan  nan  nan  nan  nan]
+Bar_graph: [nan, nan, nan, nan, nan, nan]
+Justified in forks: [0.0, 0.0]
+Main chain size: [207.6, 7.8383671769063188]
+Main chain fraction:[0.1384, 0.0052255781179375458]
+Blocks under main justified: [1245.73, 2272.1770999999717]
+finalization_quartiles:[[None, None, None, None], [None, None, None, None]]
+No finalization achieved
+supermajority link stats: {10: 800, 15: 100, 4: 2800, 8: 304}

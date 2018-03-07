@@ -1,7 +1,7 @@
 from block import Block, Dynasty
 from message import Vote
 from parameters import *
-
+from custom_functions import var_majority
 # Root of the blockchain
 ROOT = Block()
 
@@ -113,7 +113,10 @@ class VoteValidator(Validator):
         # Map {source_hash -> {target_hash -> count}} to count the votes
         # ex: self.vote_count[source][target] will be between 0 and NUM_VALIDATORS
         self.vote_count = {}
-
+        
+        self.depth_finalized = 0
+        self.num_depth_finalized = 0
+        self.highest_finalized_checkpoint_epoch = 0
     # TODO: we could write function is_justified only based on self.processed and self.votes
     #       (note that the votes are also stored in self.processed)
     def is_justified(self, _hash):
@@ -165,6 +168,8 @@ class VoteValidator(Validator):
         # We receive the block
         self.processed[block.hash] = block
 
+        self.depth_finalized += block.height - self.highest_finalized_checkpoint_epoch*EPOCH_SIZE
+        self.num_depth_finalized += 1
         # If it's an epoch block (in general)
         if block.height % EPOCH_SIZE == 0:
             #  Start a tail object for it
@@ -336,7 +341,7 @@ class VoteValidator(Validator):
         # TODO: we do not deal with finalized dynasties (the pool of validator
         # is always the same right now)
         # If there are enough votes, process them
-        if (self.vote_count[vote.source][vote.target] > (NUM_VALIDATORS * 2) // 3):
+        if (self.vote_count[vote.source][vote.target] > NUM_VALIDATORS * var_majority(vote.epoch_target - vote.epoch_source,sm_variation_str)):
             # Mark the target as justified
             try:
                 sml_stats[vote.epoch_target - vote.epoch_source] += 1
@@ -356,6 +361,8 @@ class VoteValidator(Validator):
             # If the source was a direct parent of the target, the source
             # is finalized
             if vote.epoch_source == vote.epoch_target - 1:
+                if vote.epoch_source>self.highest_finalized_checkpoint_epoch:
+                    self.highest_finalized_checkpoint_epoch = vote.epoch_source
                 self.finalized.add(vote.source)
                 self.network.report_finalized(vote.source,self.id)
         return True
