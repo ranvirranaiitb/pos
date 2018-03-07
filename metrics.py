@@ -8,6 +8,7 @@ from utils import exponential_latency
 from network import Network
 from validator import VoteValidator
 from plot_graph import plot_node_blockchains
+from collections import Counter
 from tqdm import tqdm
 
 def fraction_justified_and_finalized(validator):
@@ -101,8 +102,6 @@ def depth_calculator(validator):
     depth_finalized = (main_chain_size - max_epoch)/EPOCH_SIZE
     return depth_finalized, num_depth_finalized
 '''
-
-
 
 def finalization_quartiles(network):
     sumquartiles = [0.0,0.0,0.0,0.0]
@@ -336,15 +335,22 @@ def print_metrics_latency(num_tries,latencies, validator_set=VALIDATOR_IDS):
         print('Main chain size: {}'.format([Emc,np.sqrt(varmc)]))
         print('Main chain fraction:{}'.format([Emc/EPOCH_SIZE/NUM_EPOCH,
                             np.sqrt(varmc)/EPOCH_SIZE/NUM_EPOCH ]))
+        print('Probability of death: {}'.format(1.0 - Emc/EPOCH_SIZE/NUM_EPOCH))
         print('Blocks under main justified: {}'.format([Ebu,varbu]))
         print('finalization_quartiles:{}'.format([Equartiles,stdquartiles]))
         if finalization_achieved :
+            print('---old, ignoring dead blocks---')
             print('Delay:{}'.format([Edelay,vardelay]))
             print('Throughput:{}'.format([Ethroughput,varthroughput]))
             print('depth_finalized:{}'.format(depth_finalized))
+            print('---new, incld. dead blocks---')
+            print('Delay:{}'.format(Edelay/(Emc/EPOCH_SIZE/NUM_EPOCH)))
+            print('Throughput:{}'.format(
+                Ethroughput*(Emc/EPOCH_SIZE/NUM_EPOCH)))
         else:
             print('No finalization achieved')
-        print('supermajority link stats: {}'.format(sml_stats))
+        print('supermajority link stats: {}'
+                .format(dict(Counter(sml_stats.values()))))
         print('')
 
 

@@ -1,0 +1,97 @@
+``````````````````
+running test
+            NUM_EPOCH: 300
+            SUPER_MAJORITY: 0.8
+``````````````````
+Total height of nodes: 100
+height of connected of nodes: 100
+[300.0, 300.0, 300.0, 300.0]
+[299. 299. 299. 299. 300. 300. 300. 300.]
+Latency: 0
+Timing: [  0.           1.           2.           2.         499.66666667
+ 500.66666667 501.66666667 501.66666667]
+Bar_graph: [1.0, 1.0, 497.6666666666667, 1.0, 1.0, 0.0]
+Justified in forks: [0.0, 0.0]
+Main chain size: [1501.0, 0.0]
+Main chain fraction:[1.0006666666666666, 0.0]
+Blocks under main justified: [1501.0, 0.0]
+finalization_quartiles:[[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
+Delay:[500.6666666666667, 33.22222222221899]
+Throughput:[0.001994649802202787, 0.0]
+depth_finalized:7.983333333333333
+supermajority link stats: {1: 600000}
+
+[260.0, 260.0, 260.0, 260.0]
+[259. 259. 259. 259. 260. 260. 260. 260.]
+Latency: 50
+Timing: [  0.          86.91891892 132.77992278 154.3011583  575.76923077
+ 662.78846154 708.61538462 730.16538462]
+Bar_graph: [86.91891891891892, 45.86100386100385, 442.9893079893079, 87.01923076923083, 45.826923076923094, 21.549999999999955]
+Justified in forks: [0.0, 0.0]
+Main chain size: [1300.9, 0.6999999998270401]
+Main chain fraction:[0.8672666666666667, 0.0004666666665513601]
+Blocks under main justified: [1499.87, 0.7131000002846122]
+finalization_quartiles:[[12.48076923076923, 16.523076923076925, 19.3, 21.55], [3.9364684710624416, 4.395304110622157, 4.698854197485891, 4.980867239902949]]
+Delay:[662.7884615384615, 6506.989866863878]
+Throughput:[0.001728821931341072, 0.0]
+depth_finalized:8.407460746074607
+supermajority link stats: {1: 493392}
+
+[143.0, 143.0, 143.0, 143.0]
+[142. 142. 142. 142. 143. 143. 143. 143.]
+Latency: 100
+Timing: [   0.          203.42957746  292.30985915  361.21830986  757.34265734
+  961.5034965  1050.76923077 1124.38461538]
+Bar_graph: [203.42957746478874, 88.88028169014086, 465.0327981877278, 204.16083916083915, 89.26573426573418, 73.61538461538476]
+Justified in forks: [0.0, 0.0]
+Main chain size: [971.0, 0.0]
+Main chain fraction:[0.6473333333333333, 0.0]
+Blocks under main justified: [1492.0, 0.0]
+finalization_quartiles:[[34.10489510489511, 46.45454545454545, 55.63636363636363, 73.61538461538461], [19.91194366488296, 30.49538020101696, 40.979535307877605, 104.95086583176952]]
+Delay:[961.5034965034965, 18934.613624137943]
+Throughput:[0.0012936263765726274, 0.0]
+depth_finalized:12.036631893492704
+supermajority link stats: {1: 224795, 2: 35700, 3: 4000, 5: 2000}
+
+[6.0, 6.0, 6.0, 6.0]
+[6. 6. 6. 6. 6. 6. 6. 6.]
+Latency: 250
+Timing: [   0.          483.          704.83333333  827.33333333 1133.33333333
+ 1596.         1823.         1936.5       ]
+Bar_graph: [483.0, 221.83333333333337, 428.4999999999999, 462.66666666666674, 227.0, 113.5]
+Justified in forks: [0.0, 0.0]
+Main chain size: [596.0, 0.0]
+Main chain fraction:[0.3973333333333333, 0.0]
+Blocks under main justified: [1479.0, 0.0]
+finalization_quartiles:[[66.0, 88.16666666666667, 101.83333333333333, 113.5], [15.937377450509228, 15.17032922809811, 16.211278652702156, 17.173137938846995]]
+Delay:[1596.0, 28428.66666666651]
+Throughput:[0.0007937107869075516, 0.0]
+depth_finalized:114.1962731674737
+supermajority link stats: {1: 10400, 2: 7794, 3: 2500, 20: 2000, 4: 300, 6: 3000, 7: 1600, 9: 2100, 11: 2000, 14: 1100}
+
+[0.0, 0.0, 0.0, 0.0]
+[0. 0. 0. 0. 0. 0. 0. 0.]
+Latency: 500
+Timing: [nan nan nan nan nan nan nan nan]
+Bar_graph: [nan, nan, nan, nan, nan, nan]
+Justified in forks: [0.0, 0.0]
+Main chain size: [316.0, 0.0]
+Main chain fraction:[0.21066666666666667, 0.0]
+Blocks under main justified: [1197.0, 0.0]
+finalization_quartiles:[[None, None, None, None], [None, None, None, None]]
+No finalization achieved
+supermajority link stats: {26: 1600, 28: 500, 2: 500, 5: 900}
+
+[0.0, 0.0, 0.0, 0.0]
+[0. 0. 0. 0. 0. 0. 0. 0.]
+Latency: 1000
+Timing: [nan nan nan nan nan nan nan nan]
+Bar_graph: [nan, nan, nan, nan, nan, nan]
+Justified in forks: [0.0, 0.0]
+Main chain size: [1.0, 0.0]
+Main chain fraction:[0.0006666666666666668, 0.0]
+Blocks under main justified: [1.0, 0.0]
+finalization_quartiles:[[None, None, None, None], [None, None, None, None]]
+No finalization achieved
+supermajority link stats: {}
+
