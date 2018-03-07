@@ -344,12 +344,11 @@ class VoteValidator(Validator):
         # is always the same right now)
         # If there are enough votes, process them
         if (self.vote_count[vote.source][vote.target] > (NUM_VALIDATORS * SUPER_MAJORITY)):
-            # Mark the target as justified
-            try:
-                sml_stats[vote.epoch_target - vote.epoch_source] += 1
-            except KeyError:
-                sml_stats[vote.epoch_target - vote.epoch_source ] = 1
 
+            # record the length of a link
+            sml_stats[(vote.source, vote.target)] = vote.epoch_target - vote.epoch_source
+
+            # Mark the target as justified
             self.justified.add(vote.target)
             self.network.report_justified(vote.target,self.id)
             if vote.target in self.justification_dependencies:

@@ -8,6 +8,7 @@ from utils import exponential_latency
 from network import Network
 from validator import VoteValidator
 from plot_graph import plot_node_blockchains
+from collections import Counter
 from tqdm import tqdm
 
 def fraction_justified_and_finalized(validator):
@@ -338,6 +339,7 @@ def print_metrics_latency(num_tries,latencies, validator_set=VALIDATOR_IDS):
         print('Main chain size: {}'.format([Emc,np.sqrt(varmc)]))
         print('Main chain fraction:{}'.format([Emc/EPOCH_SIZE/NUM_EPOCH,
                             np.sqrt(varmc)/EPOCH_SIZE/NUM_EPOCH ]))
+        print('Probability of death: {}'.format(1.0 - Emc/EPOCH_SIZE/NUM_EPOCH))
         print('Blocks under main justified: {}'.format([Ebu,varbu]))
         print('finalization_quartiles:{}'.format([Equartiles,stdquartiles]))
         if finalization_achieved :
@@ -346,7 +348,8 @@ def print_metrics_latency(num_tries,latencies, validator_set=VALIDATOR_IDS):
             print('depth_finalized:{}'.format(depth_finalized))
         else:
             print('No finalization achieved')
-        print('supermajority link stats: {}'.format(sml_stats))
+        print('supermajority link stats: {}'
+                .format(dict(Counter(sml_stats.values()))))
         print('')
 
 
