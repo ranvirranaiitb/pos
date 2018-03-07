@@ -343,9 +343,14 @@ def print_metrics_latency(num_tries,latencies, validator_set=VALIDATOR_IDS):
         print('Blocks under main justified: {}'.format([Ebu,varbu]))
         print('finalization_quartiles:{}'.format([Equartiles,stdquartiles]))
         if finalization_achieved :
+            print('---old, ignoring dead blocks---')
             print('Delay:{}'.format([Edelay,vardelay]))
             print('Throughput:{}'.format([Ethroughput,varthroughput]))
             print('depth_finalized:{}'.format(depth_finalized))
+            print('---new, incld. dead blocks---')
+            print('Delay:{}'.format(Edelay/(Emc/EPOCH_SIZE/NUM_EPOCH)))
+            print('Throughput:{}'.format(
+                Ethroughput*(Emc/EPOCH_SIZE/NUM_EPOCH)))
         else:
             print('No finalization achieved')
         print('supermajority link stats: {}'
