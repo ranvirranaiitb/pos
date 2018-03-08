@@ -8,6 +8,7 @@ from utils import exponential_latency
 from network import Network
 from validator import VoteValidator
 from plot_graph import plot_node_blockchains
+from collections import Counter
 from tqdm import tqdm
 
 def fraction_justified_and_finalized(validator):
@@ -326,28 +327,48 @@ def print_metrics_latency(num_tries,latencies, validator_set=VALIDATOR_IDS):
         depth_finalized = depth_finalized/num_depth_finalized
 
         Etiming = Etiming/timing_count
+        
+        print('=== Statistics ===')
+        print('Latency: {}'
+                .format(latency))
+        print('Timing: {}'
+                .format(Etiming))
+        print('Bar_graph: {}'
+                .format([Etiming[1], (Etiming[2]-Etiming[1]),
+                        (Etiming[4]-Etiming[2]),(Etiming[5]-Etiming[4]),
+                        (Etiming[6]-Etiming[5]),(Etiming[7]-Etiming[6])]))
+        print('Justified in forks: {}'
+                .format([Ejff,np.sqrt(varjff)]))
+        print('Main chain size (root included): {}'
+                .format([Emc,np.sqrt(varmc)]))
+        print('Main chain fraction:{}'
+                .format([Emc/(EPOCH_SIZE*NUM_EPOCH + 1),        # include ROOT
+                        np.sqrt(varmc)/EPOCH_SIZE/NUM_EPOCH ]))
+        print('Probability of death: {}'
+                .format(1.0 - Emc/(EPOCH_SIZE*NUM_EPOCH + 1)))  # include ROOT
+        print('Blocks under main justified: {}'
+                .format([Ebu,varbu]))
+        print('finalization_quartiles:{}'
+                .format([Equartiles,stdquartiles]))
 
-        print('Latency: {}'.format(latency))
-        print('Timing: {}'.format(Etiming))
-        print('Bar_graph: {}'.format([Etiming[1], (Etiming[2]-Etiming[1]),
-                            (Etiming[4]-Etiming[2]),(Etiming[5]-Etiming[4]),
-                            (Etiming[6]-Etiming[5]),(Etiming[7]-Etiming[6])]))
-        #print('Justified: {}'.format([Ejf,varjf]))
-        #print('Finalized: {}'.format([Eff,varff]))
-        print('Justified in forks: {}'.format([Ejff,np.sqrt(varjff)]))
-        print('Main chain size: {}'.format([Emc,np.sqrt(varmc)]))
-        print('Main chain fraction:{}'.format([Emc/EPOCH_SIZE/NUM_EPOCH,
-                            np.sqrt(varmc)/EPOCH_SIZE/NUM_EPOCH ]))
-        print('Blocks under main justified: {}'.format([Ebu,varbu]))
-        print('finalization_quartiles:{}'.format([Equartiles,stdquartiles]))
         if finalization_achieved :
-            print('Delay:{}'.format([Edelay,vardelay]))
-            print('Throughput:{}'.format([Ethroughput,varthroughput]))
-            print('depth_finalized:{}'.format(depth_finalized))
+            print('---old, ignoring dead blocks---')
+            print('Delay:{}'
+                    .format([Edelay,vardelay]))
+            print('Throughput:{}'
+                    .format([Ethroughput,varthroughput]))
+            print('depth_finalized:{}'
+                    .format(depth_finalized))
+            print('---new, incld. dead blocks---')
+            print('Delay:{}'
+                    .format(Edelay/(Emc/EPOCH_SIZE/NUM_EPOCH)))
+            print('Throughput:{}'
+                    .format(Ethroughput*(Emc/EPOCH_SIZE/NUM_EPOCH)))
         else:
             print('No finalization achieved')
-        print('supermajority link stats: {}'.format(sml_stats))
-        print('')
+        print('supermajority link stats: {}'
+                .format(dict(Counter(sml_stats.values()))))
+        print('=== END === ')
 
 
 if __name__ == '__main__':
@@ -362,19 +383,19 @@ if __name__ == '__main__':
 
     print('``````````````````')
     print("""running test
+            PROTOCOL: vote-on-majority-after-delay
             NUM_EPOCH: {}
             SUPER_MAJORITY: {}
-            VOTING_DELAY: {}""".
+            NUM_VALIDATORS: {}""".
             format(NUM_EPOCH,
-                    SUPER_MAJORITY,
-                    VOTING_DELAY))
+                   SUPER_MAJORITY,
+                   NUM_VALIDATORS))
     print('``````````````````')
 
     for fraction_disconnected in fractions:
         num_validators = int((1.0 - fraction_disconnected) * NUM_VALIDATORS)
         validator_set = VALIDATOR_IDS[:num_validators]
-
-        print("Total height of nodes: {}".format(NUM_VALIDATORS))
+        
         print("height of connected of nodes: {}".format(len(validator_set)))
 
         # Uncomment to have different latencies

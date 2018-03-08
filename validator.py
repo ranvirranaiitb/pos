@@ -38,9 +38,6 @@ class Validator(object):
         self.id = id
         self.network.report_proposal(ROOT)
 
-
-
-
     # If we processed an object but did not receive some dependencies
     # needed to process it, save it to be processed later
     def add_dependency(self, hash_, obj):
@@ -93,9 +90,6 @@ class Validator(object):
             self.network.broadcast(new_block)
             self.network.report_proposal(new_block)
             self.on_receive(new_block, sml_stats)  # immediately "receive" the new block (no network latency)
-            
-
-
 
 class VoteValidator(Validator):
     """Add the vote messages + slashing conditions capability"""
@@ -379,13 +373,11 @@ class VoteValidator(Validator):
         # is always the same right now)
         # If there are enough votes, process them
         if (self.vote_count[vote.source][vote.target] > (NUM_VALIDATORS * SUPER_MAJORITY)):
-            # Mark the target as justified
-            #print('DEBUG7!!!!!!!!!!!!!!!!!!!!!!!!')
-            try:                    ####!!!!!!!!!!!!!!!!WRONG DEFINITION****************
-                sml_stats[vote.epoch_target - vote.epoch_source] += 1
-            except KeyError:
-                sml_stats[vote.epoch_target - vote.epoch_source ] = 1
 
+            # record the length of a link
+            sml_stats[(vote.source, vote.target)] = vote.epoch_target - vote.epoch_source
+
+            # Mark the target as justified
             self.justified.add(vote.target)
             self.network.report_justified(vote.target,self.id)
 
