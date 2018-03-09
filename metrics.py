@@ -341,29 +341,29 @@ def print_metrics_latency(num_tries,latencies, validator_set=VALIDATOR_IDS):
                 .format([Ejff,np.sqrt(varjff)]))
         print('Main chain size (root included): {}'
                 .format([Emc,np.sqrt(varmc)]))
-        print('Main chain fraction:{}'
-                .format([Emc/(EPOCH_SIZE*NUM_EPOCH + 1),        # include ROOT
-                        np.sqrt(varmc)/EPOCH_SIZE/NUM_EPOCH ]))
         print('Probability of death: {}'
                 .format(1.0 - Emc/(EPOCH_SIZE*NUM_EPOCH + 1)))  # include ROOT
         print('Blocks under main justified: {}'
                 .format([Ebu,varbu]))
         print('finalization_quartiles:{}'
                 .format([Equartiles,stdquartiles]))
+        print('Main chain fraction:{}'
+                .format([Emc/(EPOCH_SIZE*NUM_EPOCH + 1),        # include ROOT
+                        np.sqrt(varmc)/EPOCH_SIZE/NUM_EPOCH ]))
 
         if finalization_achieved :
+            print('---new, incld. dead blocks---')
+            print('Delay:{}'
+                    .format(Edelay/(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))))
+            print('Throughput:{}'
+                    .format(Ethroughput))
+            print('depth:{}'
+                    .format(depth_finalized))
             print('---old, ignoring dead blocks---')
             print('Delay:{}'
                     .format([Edelay,vardelay]))
             print('Throughput:{}'
                     .format([Ethroughput,varthroughput]))
-            print('depth_finalized:{}'
-                    .format(depth_finalized))
-            print('---new, incld. dead blocks---')
-            print('Delay:{}'
-                    .format(Edelay/(Emc/EPOCH_SIZE/NUM_EPOCH)))
-            print('Throughput:{}'
-                    .format(Ethroughput*(Emc/EPOCH_SIZE/NUM_EPOCH)))
         else:
             print('No finalization achieved')
         print('supermajority link stats: {}'
