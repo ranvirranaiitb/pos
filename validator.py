@@ -281,28 +281,6 @@ class VoteValidator(Validator):
                 self.network.report_vote(vote)
                 assert self.processed[target_block.hash]
 
-    def maybe_vote_last_checkpoint_from_vote(self, targethash, targetepoch):
-        #print('vote-on-vote')
-        #input()
-        source_block = self.highest_justified_checkpoint
-
-
-
-        if targetepoch>self.current_epoch:
-            assert targetepoch > source_block.epoch, ("target epoch: {},"
-            "source epoch: {}".format(targetepoch, source_block.epoch))
-            self.current_epoch = targetepoch
-            ########DOUBT:Do we need to check ancestry? ############# NEED TO DO THAT, THIS IS A BUG
-            vote = Vote(source_block.hash,
-                        targethash,
-                        source_block.epoch,
-                        targetepoch,
-                        self.id)
-            self.network.broadcast(vote)
-            self.network.report_vote(vote)
-
-
-
     def accept_vote(self, vote, sml_stats = {}):
         """Called on receiving a vote message.
         """
@@ -315,7 +293,9 @@ class VoteValidator(Validator):
             self.vote_count_premature[vote.source] = {}
         self.vote_count_premature[vote.source][vote.target] = self.vote_count_premature[vote.source].get(vote.target,0) + 1
 
-           
+        # accept the vote even if block is not processed and received
+        # retrive block from global network (not practical, but sufficient
+        # for simulation)
         if(self.vote_count_premature[vote.source].get(vote.target, 0) >=1 ):
             if  vote.source not in self.processed:
                 if vote.source not in self.blocks_received:
@@ -330,11 +310,6 @@ class VoteValidator(Validator):
         if vote.source not in self.vote_count:
             self.vote_count[vote.source] = {}
 
-
-            '''        
-            self.maybe_vote_last_checkpoint_from_vote(vote.source,vote.epoch_source)
-            self.maybe_vote_last_checkpoint_from_vote(vote.target,vote.epoch_target)        
-            '''
         # Check that the source is processed and justified
         # TODO: If the source is not justified, add to dependencies?
         #******************************ADD DEPENDENCIES HERE************************************
