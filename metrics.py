@@ -400,7 +400,7 @@ if __name__ == '__main__':
 
         # Uncomment to have different latencies
         #latencies = [i for i in range(10, 300, 20)] + [500, 750, 1000]
-        latencies = [0,50,100,250,500,1000]
+        latencies = [2000]
         num_tries = 1
 
         print_metrics_latency(num_tries,latencies, validator_set)

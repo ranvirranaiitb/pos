@@ -132,3 +132,25 @@ Delay:[73380.44256756757, 2284083106.8007545]
 Throughput:[0.0003282720095254522, 0.0]
 supermajority link stats: {1: 1, 2: 2, 3: 2, 4: 1, 8: 1, 16: 1, 19: 1, 20: 1, 21: 1, 22: 1}
 === END === 
+``````````````````
+running test
+            PROTOCOL: vote-on-majority-after-delay
+            NUM_EPOCH: 500
+            SUPER_MAJORITY: 0.8
+            NUM_VALIDATORS: 100
+``````````````````
+height of connected of nodes: 100
+[0.0, 0.0, 0.0, 0.0]
+=== Statistics ===
+Latency: 2000
+Timing: [nan nan nan nan nan nan nan nan]
+Bar_graph: [nan, nan, nan, nan, nan, nan]
+Justified in forks: [0.0, 0.0]
+Main chain size (root included): [1.0, 0.0]
+Probability of death: 0.9996001599360256
+Blocks under main justified: [1.0, 0.0]
+finalization_quartiles:[[None, None, None, None], [None, None, None, None]]
+Main chain fraction:[0.00039984006397441024, 0.0]
+No finalization achieved
+supermajority link stats: {}
+=== END === 
