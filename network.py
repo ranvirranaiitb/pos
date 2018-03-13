@@ -95,6 +95,11 @@ class Network(object):
             if vote.epoch_target - vote.epoch_source ==1 :
                 self.global_finalized_time[vote.source] = self.time - self.first_proposal_time[vote.source]
                 self.global_finalized_time_absolute[vote.source] = self.time
+                prev_block_hash = self.processed[vote.source].prev_hash
+                while prev_block_hash !=0 and prev_block_hash not in self.global_finalized_time_absolute:
+                    self.global_finalized_time_absolute[prev_block_hash] = self.time
+                    prev_block_hash = self.processed[prev_block_hash].prev_hash
+
                 self.first_finalization_time[vote.source] = self.first_finalization_time_auxillary[vote.source][vote.target]
 
     def report_justified(self,blockhash,val_id):
