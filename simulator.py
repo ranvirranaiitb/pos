@@ -23,11 +23,11 @@ if __name__ == '__main__':
     print("AVG_LATENCY\t:\t{}".format(AVG_LATENCY))
     network = Network(exponential_latency(AVG_LATENCY))
     validators = [VoteValidator(network, i) for i in VALIDATOR_IDS]
+    sml_stats = {}
 
-    num_epochs = 50
-    for t in tqdm(range(BLOCK_PROPOSAL_TIME * EPOCH_SIZE * num_epochs)):
+    for t in tqdm(range(BLOCK_PROPOSAL_TIME * EPOCH_SIZE * NUM_EPOCH)):
         start = time.time()
-        network.tick()
+        network.tick(sml_stats)
         # print("Took {} seconds for one tick".format(time.time() - start))
 
         if t % (BLOCK_PROPOSAL_TIME * EPOCH_SIZE) == 0:

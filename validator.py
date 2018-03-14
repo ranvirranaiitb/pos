@@ -37,6 +37,7 @@ class Validator(object):
         self.tail_membership = {ROOT.hash: ROOT.hash}
         self.id = id
         self.network.report_proposal(ROOT)
+        self.blocks_received = {ROOT.hash}
 
     # If we processed an object but did not receive some dependencies
     # needed to process it, save it to be processed later
@@ -84,12 +85,14 @@ class Validator(object):
         # At time BLOCK_PROPOSAL_TIME: validator 1
         # .. At time NUM_VALIDATORS * BLOCK_PROPOSAL_TIME: validator 0
         self.vote_on_delay()
-        if self.id == (time // BLOCK_PROPOSAL_TIME) % NUM_VALIDATORS and time % BLOCK_PROPOSAL_TIME == 0:
+        if self.id == (time // BLOCK_PROPOSAL_TIME) % NUM_VALIDATORS and \
+                       time % BLOCK_PROPOSAL_TIME == 0:
             # One node is authorized to create a new block and broadcast it
             new_block = Block(self.head, self.finalized_dynasties)
             self.network.broadcast(new_block)
             self.network.report_proposal(new_block)
-            self.on_receive(new_block, sml_stats)  # immediately "receive" the new block (no network latency)
+            # immediately "receive" the new block (no network latency)
+            self.on_receive(new_block, sml_stats)
 
 class VoteValidator(Validator):
     """Add the vote messages + slashing conditions capability"""
@@ -117,6 +120,7 @@ class VoteValidator(Validator):
         # ex: self.vote_count[source][target] will be between 0 and NUM_VALIDATORS
         self.vote_count = {}
 
+        self.vote_count_premature = {}
         self.depth_finalized = 0
         self.num_depth_finalized = 0
         self.highest_finalized_checkpoint_epoch = 0
@@ -125,25 +129,25 @@ class VoteValidator(Validator):
         self.vote_permission = {} #Height:bool
         self.first_block_height={} #Height:block
 
-    # TODO: we could write function is_justified only based on self.processed and self.votes
-    #       (note that the votes are also stored in self.processed)
+    # TODO: we could write function is_justified only based on self.processed
+    #       and self.votes (note that the votes are also stored in
+    #       self.processed)
     def is_justified(self, _hash):
-        """Returns True if the `_hash` corresponds to a justified checkpoint.
-
-        A checkpoint c is justified if there exists a supermajority link (c' -> c) where
-        c' is justified. The genesis block is justified.
+        """
+        Returns True if the `_hash` corresponds to a justified checkpoint.
+        A checkpoint c is justified if there exists a supermajority link
+        (c' -> c) where c' is justified. The genesis block is justified.
         """
         # Check that the function is called only on checkpoints
         assert _hash in self.processed, "Couldn't find block hash %d" % _hash
-        assert self.processed[_hash].height % EPOCH_SIZE == 0, "Block is not a checkpoint"
+        assert self.processed[_hash].height % EPOCH_SIZE == 0, \
+        "Block is not a checkpoint"
 
         return _hash in self.justified
 
     def is_finalized(self, _hash):
-        """Returns True if the `_hash` corresponds to a justified checkpoint.
-
-        A checkpoint c is justified if there exists a supermajority link (c' -> c) where
-        c' is justified. The genesis block is justified.
+        """
+        Returns True if the `_hash` corresponds to a finalized checkpoint.
         """
         # Check that the function is called only on checkpoints
         assert _hash in self.processed, "Couldn't find block hash %d" % _hash
@@ -168,6 +172,10 @@ class VoteValidator(Validator):
         Returns:
             True if block was accepted or False if we are missing dependencies
         """
+
+        # we "receive" the block, to start keep track of its existence
+        self.blocks_received.add(block.hash)
+
         # If we didn't receive the block's parent yet, wait
         if block.prev_hash not in self.processed:
             self.add_dependency(block.prev_hash, block)
@@ -176,8 +184,14 @@ class VoteValidator(Validator):
         # We receive the block
         self.processed[block.hash] = block
 
-        self.depth_finalized += block.height - self.highest_finalized_checkpoint_epoch*EPOCH_SIZE
-        self.num_depth_finalized += 1
+
+        # laggy blog from delay
+        if  (block.height <= self.highest_finalized_checkpoint_epoch*EPOCH_SIZE):
+            pass
+        else:
+            self.depth_finalized += block.height - \
+                            self.highest_finalized_checkpoint_epoch*EPOCH_SIZE
+            self.num_depth_finalized += 1
 
         if block.height not in self.first_block_height:
             self.first_block_height[block.height] = block
@@ -189,7 +203,8 @@ class VoteValidator(Validator):
             self.tails[block.hash] = block
             # Maybe vote
             if block.height not in self.time_to_vote:
-                self.time_to_vote[block.height] = self.network.time + random.randint(1,VOTING_DELAY)
+                self.time_to_vote[block.height] = self.network.time + \
+                                    random.randint(0,VOTING_DELAY)
                 self.vote_permission[block.height] = False
 
             #if self.vote_permission.get(block.height,False):
@@ -210,14 +225,16 @@ class VoteValidator(Validator):
         return True
 
     def check_head(self, block):
-        """Reorganize the head to stay on the chain with the highest
+        """
+        Reorganize the head to stay on the chain with the highest
         justified checkpoint.
 
         If we are on wrong chain, reset the head to be the highest descendent
         among the chains containing the highest justified checkpoint.
 
         Args:
-            block: latest block processed."""
+            block: latest block processed.
+        """
 
         # we are on the right chain, the head is simply the latest block
         if self.is_ancestor(self.highest_justified_checkpoint,
@@ -265,19 +282,17 @@ class VoteValidator(Validator):
         # BNO: The source will be the justified checkpoint of greatest height
         source_block = self.highest_justified_checkpoint
 
-        #print('DEBUG6')
-        #input()
-
-        # If the block is an epoch block of a higher epoch than what we've seen so far
+        # If the block is an epoch block of a higher epoch than
+        #what we've seen so far
         # This means that it's the first time we see a checkpoint at this height
-        # It also means we never voted for any other checkpoint at this height (rule 1)
+        # It also means we never voted for any other checkpoint
+        #at this height (rule 1)
         if target_block.epoch > self.current_epoch:
-            #assert target_block.epoch > source_block.epoch, ("target epoch: {},"
-            #"source epoch: {}".format(target_block.epoch, source_block.epoch))
+            # assert target_block.epoch > source_block.epoch, ("target epoch: {},"
+            # "source epoch: {}".format(target_block.epoch, source_block.epoch))
 
-            # print('Validator %d: now in epoch %d' % (self.id, target_block.epoch))
             # Increment our epoch
-            if target_block.epoch>source_block.epoch:
+            if target_block.epoch > source_block.epoch:
                 self.current_epoch = target_block.epoch
 
                 # if the target_block is a descendent of the source_block, send
@@ -297,25 +312,35 @@ class VoteValidator(Validator):
 
                     del self.time_to_vote[block.height]
                     del self.vote_permission[block.height]
-                    '''
-                    print('DEBUG5')
-                    print(source_block.hash)
-                    print(target_block.hash)
-                    print(source_block.epoch)
-                    print(target_block.epoch)
-                    #input()
-                    '''
+
                     assert self.processed[target_block.hash]
 
     def accept_vote(self, vote, sml_stats = {}):
         """Called on receiving a vote message.
         """
-        # print('Node %d: got a vote' % self.id, source.view, prepare.view_source,
-              # prepare.blockhash, vote.blockhash in self.processed)
 
-       # If the block has not yet been processed, wait
-        if vote.source not in self.processed:
-            self.add_dependency(vote.source, vote)
+        if vote.source not in self.vote_count_premature:
+            self.vote_count_premature[vote.source] = {}
+
+        self.vote_count_premature[vote.source][vote.target] = \
+        self.vote_count_premature[vote.source].get(vote.target,0) + 1
+
+        ####################
+        ### NEW PROTOCOL ###
+        ####################
+        # accept the vote even if block is not processed and received
+        # retrive block from global network (not practical, but sufficient
+        # for simulation)
+        if(self.vote_count_premature[vote.source].get(vote.target, 0) >=1 ):
+            if  vote.source not in self.processed:
+                if vote.source not in self.blocks_received:
+                    self.accept_block(self.network.processed[vote.source])
+            if  vote.target not in self.processed:
+                if vote.target not in self.blocks_received:
+                    self.accept_block(self.network.processed[vote.target])
+
+        if vote.source not in self.vote_count:
+            self.vote_count[vote.source] = {}
 
         # Check that the source is processed and justified
         # TODO: If the source is not justified, add to dependencies?
@@ -390,7 +415,7 @@ class VoteValidator(Validator):
             if vote.epoch_target > self.highest_justified_checkpoint.epoch:
                 self.highest_justified_checkpoint = self.processed[vote.target]
                 #self.time_to_vote = self.network.time + np.random.uniform(0,VOTING_DELAY)
-    
+
             # If the source was a direct parent of the target, the source
             # is finalized
             if vote.epoch_source == vote.epoch_target - 1:
@@ -399,6 +424,7 @@ class VoteValidator(Validator):
                 self.finalized.add(vote.source)
                 self.network.report_finalized(vote.source,self.id)
         return True
+
     '''
     def vote_if_delayed(self):
         if self.network.time >= self.time_to_vote:
@@ -414,7 +440,7 @@ class VoteValidator(Validator):
             else:
                 self.vote_permission = True
     '''
-                
+
     def vote_on_delay(self):
         for blockheight in range((self.current_epoch+1)*EPOCH_SIZE,self.head.height,EPOCH_SIZE):
             if blockheight in self.time_to_vote:
