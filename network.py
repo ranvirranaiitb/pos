@@ -75,28 +75,48 @@ class Network(object):
         self.processed[block.hash] = block
 
     def report_vote(self,vote):
+        """
+        called on every vote
+        updates the global view of when a block is justified and finalized
+        """
+
+        # initialize
         if vote.source not in self.vote_count:
             self.vote_count[vote.source] = {}
+
+        # we receive the vote
         self.vote_count[vote.source][vote.target] = self.vote_count[vote.source].get(vote.target,0) + 1
-        if self.vote_count[vote.source][vote.target] ==1:
+
+        if self.vote_count[vote.source][vote.target] == 1:
             if vote.source not in self.first_justification_time_auxillary:
                 self.first_justification_time_auxillary[vote.source] = {}
+
             self.first_justification_time_auxillary[vote.source][vote.target] = self.time - self.first_proposal_time[vote.target]
+
             if vote.epoch_target - vote.epoch_source == 1:
                 if vote.source not in self.first_finalization_time_auxillary:
                     self.first_finalization_time_auxillary[vote.source] = {}
+
                 self.first_finalization_time_auxillary[vote.source][vote.target] = self.time - self.first_proposal_time[vote.source]
+
+        # when supermajority link first achieved
         if self.vote_count[vote.source][vote.target] == (NUM_VALIDATORS*1)//2 + 1:
             if vote.source not in self.supermajority_link:
                 self.supermajority_link[vote.source] = []           ##In this function we assume all validators are honest, hence no checking condition
+
             self.supermajority_link[vote.source].append(vote.target) # if there is a vote from vote.source, it mean it was justified
+
+            # justfiy the target
             self.global_justified_time[vote.target] = self.time - self.first_proposal_time[vote.target]
             self.first_justification_time[vote.target] = self.first_justification_time_auxillary[vote.source][vote.target]
-            if vote.epoch_target - vote.epoch_source ==1 :
+
+            # direct descendent, finalize the source
+            if vote.epoch_target - vote.epoch_source == 1:
                 self.global_finalized_time[vote.source] = self.time - self.first_proposal_time[vote.source]
                 self.global_finalized_time_absolute[vote.source] = self.time
                 prev_block_hash = self.processed[vote.source].prev_hash
-                while prev_block_hash !=0 and prev_block_hash not in self.global_finalized_time_absolute:
+
+                while prev_block_hash != 0 and prev_block_hash not in self.global_finalized_time_absolute:
                     self.global_finalized_time_absolute[prev_block_hash] = self.time
                     prev_block_hash = self.processed[prev_block_hash].prev_hash
 

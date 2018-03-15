@@ -40,12 +40,23 @@ def fraction_justified_and_finalized(validator):
     return fraction_justified, fraction_finalized, fraction_forked_justified
 
 def delay_throughput(network):
+    """
+    Calculate the delay and throughput of all finalized blocks
+    delay       -   time taken from first proposal to it being first
+                    finalized
+    throughput  -   highest checkpoint / time the last epoch was
+                    finalized
+    """
+
     delay = {}
     Edelay = 0.0
     E2delay = 0.0
+
+    # Only calculate for finalized checkpoints
+    # TODO bug? should it be for all finalized blocks?
     for block_hash in network.global_finalized_time_absolute :
         delay[block_hash] = network.global_finalized_time_absolute[block_hash]  - network.first_proposal_time[block_hash]
-    for block_hash in delay :
+    for block_hash in delay:
         Edelay += delay[block_hash]
         E2delay += delay[block_hash]**2
     if len(delay)>0:
@@ -54,16 +65,14 @@ def delay_throughput(network):
     else:
         Edelay = Edelay
         E2delay = E2delay
-    min_time = BLOCK_PROPOSAL_TIME*EPOCH_SIZE*NUM_EPOCH
-    max_time = 1
-    max_epoch=0
+
+    max_time    = 1
+    max_epoch   = 0
+
     for block_hash in network.global_finalized_time_absolute:
         if(network.global_finalized_time_absolute[block_hash]>=max_time):
             max_time = network.global_finalized_time_absolute[block_hash]
-    for block_hash in network.global_finalized_time_absolute:
-        if(network.first_proposal_time[block_hash]<=min_time):
-            min_time = network.first_proposal_time[block_hash]
-    for block_hash in network.global_finalized_time_absolute:
+
         if((network.processed[block_hash].height)/EPOCH_SIZE>=max_epoch):
             max_epoch = (network.processed[block_hash].height)/EPOCH_SIZE
 
