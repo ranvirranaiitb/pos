@@ -178,6 +178,17 @@ class VoteValidator(Validator):
         # we "receive" the block, to start keep track of its existence
         self.blocks_received.add(block.hash)
 
+        # If it's an epoch block (in general)
+        if block.height % EPOCH_SIZE == 0:
+            # start wait-time
+            if block.height not in self.time_to_vote:
+                self.time_to_vote[block.height] = self.network.time + \
+                                    random.randint(0,VOTING_DELAY)
+                self.vote_permission[block.height] = False
+
+            #if self.vote_permission.get(block.height,False):
+            #    self.maybe_vote_last_checkpoint(block)
+
         # If we didn't receive the block's parent yet, wait
         if block.prev_hash not in self.processed:
             self.add_dependency(block.prev_hash, block)
@@ -203,14 +214,6 @@ class VoteValidator(Validator):
             #  Start a tail object for it
             self.tail_membership[block.hash] = block.hash
             self.tails[block.hash] = block
-            # Maybe vote
-            if block.height not in self.time_to_vote:
-                self.time_to_vote[block.height] = self.network.time + \
-                                    random.randint(0,VOTING_DELAY)
-                self.vote_permission[block.height] = False
-
-            #if self.vote_permission.get(block.height,False):
-            #    self.maybe_vote_last_checkpoint(block)
 
         # Otherwise...
         else:
@@ -328,13 +331,16 @@ class VoteValidator(Validator):
         # accept the vote even if block is not processed and received
         # retrive block from global network (not practical, but sufficient
         # for simulation)
-        if vote.source not in self.blocks_received:
-            self.accept_block(self.network.processed[vote.source])
-        if vote.target not in self.blocks_received:
-            self.accept_block(self.network.processed[vote.target])
+        # if vote.source not in self.blocks_received:
+            # self.accept_block(self.network.processed[vote.source])
+        # if vote.target not in self.blocks_received:
+            # self.accept_block(self.network.processed[vote.target])
+#
+        # if vote.source not in self.vote_count:
+            # self.vote_count[vote.source] = {}
 
-        if vote.source not in self.vote_count:
-            self.vote_count[vote.source] = {}
+        if vote.source not in self.processed:
+            self.add_dependency(vote.source,vote)
 
         # Check that the source is processed and justified
         # TODO: If the source is not justified, add to dependencies?
