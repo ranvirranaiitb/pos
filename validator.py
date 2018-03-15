@@ -84,7 +84,10 @@ class Validator(object):
         # At time 0: validator 0
         # At time BLOCK_PROPOSAL_TIME: validator 1
         # .. At time NUM_VALIDATORS * BLOCK_PROPOSAL_TIME: validator 0
+
+        # maybe vote, if it is time
         self.vote_on_delay()
+
         if self.id == (time // BLOCK_PROPOSAL_TIME) % NUM_VALIDATORS and \
                        time % BLOCK_PROPOSAL_TIME == 0:
             # One node is authorized to create a new block and broadcast it
@@ -120,14 +123,13 @@ class VoteValidator(Validator):
         # ex: self.vote_count[source][target] will be between 0 and NUM_VALIDATORS
         self.vote_count = {}
 
-        self.vote_count_premature = {}
         self.depth_finalized = 0
         self.num_depth_finalized = 0
         self.highest_finalized_checkpoint_epoch = 0
 
-        self.time_to_vote = {} # Height: int
-        self.vote_permission = {} #Height:bool
-        self.first_block_height={} #Height:block
+        self.time_to_vote       = {} # Height: int
+        self.vote_permission    = {} #Height:bool # currently deprecated
+        self.first_block_height = {} #Height:block
 
     # TODO: we could write function is_justified only based on self.processed
     #       and self.votes (note that the votes are also stored in
@@ -181,7 +183,7 @@ class VoteValidator(Validator):
             self.add_dependency(block.prev_hash, block)
             return False
 
-        # We receive the block
+        # We process the block
         self.processed[block.hash] = block
 
 
@@ -316,14 +318,9 @@ class VoteValidator(Validator):
                     assert self.processed[target_block.hash]
 
     def accept_vote(self, vote, sml_stats = {}):
-        """Called on receiving a vote message.
         """
-
-        if vote.source not in self.vote_count_premature:
-            self.vote_count_premature[vote.source] = {}
-
-        self.vote_count_premature[vote.source][vote.target] = \
-        self.vote_count_premature[vote.source].get(vote.target,0) + 1
+        Called on receiving a vote message.
+        """
 
         ####################
         ### NEW PROTOCOL ###
@@ -331,13 +328,10 @@ class VoteValidator(Validator):
         # accept the vote even if block is not processed and received
         # retrive block from global network (not practical, but sufficient
         # for simulation)
-        if(self.vote_count_premature[vote.source].get(vote.target, 0) >=1 ):
-            if  vote.source not in self.processed:
-                if vote.source not in self.blocks_received:
-                    self.accept_block(self.network.processed[vote.source])
-            if  vote.target not in self.processed:
-                if vote.target not in self.blocks_received:
-                    self.accept_block(self.network.processed[vote.target])
+        if vote.source not in self.blocks_received:
+            self.accept_block(self.network.processed[vote.source])
+        if vote.target not in self.blocks_received:
+            self.accept_block(self.network.processed[vote.target])
 
         if vote.source not in self.vote_count:
             self.vote_count[vote.source] = {}
@@ -442,9 +436,12 @@ class VoteValidator(Validator):
     '''
 
     def vote_on_delay(self):
+        """
+        votes when it is time
+        """
         for blockheight in range((self.current_epoch+1)*EPOCH_SIZE,self.head.height,EPOCH_SIZE):
             if blockheight in self.time_to_vote:
-                if self.network.time > self.time_to_vote[blockheight] :
+                if self.network.time > self.time_to_vote[blockheight]:
                     self.vote_at_given_height(blockheight)
                     '''
                     print("I am here-2")
@@ -453,15 +450,26 @@ class VoteValidator(Validator):
                     '''
 
     def vote_at_given_height(self,blockheight):
+        """
+        vote cast from highest justfied_checkpoint to a new block who's
+        wait-time is up
+        """
         temp = 0
         temptarget = None
+
+        # initialize
         if self.highest_justified_checkpoint.hash not in self.vote_count:
             self.vote_count[self.highest_justified_checkpoint.hash] = {}
+
+        # get most popular block to vote for
         for targethash in self.vote_count[self.highest_justified_checkpoint.hash]:
-            if self.vote_count[self.highest_justified_checkpoint.hash][targethash]>temp and self.network.processed[targethash].height == blockheight :
+            if self.vote_count[self.highest_justified_checkpoint.hash][targethash] > \
+                    temp and self.network.processed[targethash].height == blockheight :
+
                 temp = self.vote_count[self.highest_justified_checkpoint.hash][targethash]
                 temptarget = targethash
-        if temp>0:
+
+        if temp > 0:
             #print("DEBUG3")
             #input()
             if temptarget in self.processed:
@@ -469,7 +477,10 @@ class VoteValidator(Validator):
                 #input()
                 #print(self.processed[temptarget].height)
                 #print(self.current_epoch)
-                self.maybe_vote_last_checkpoint(self.processed[temptarget]) #If the targetblock has not yet arrived, wait till the targetblock arrives and then do the maximization
+
+                # If the targetblock has not yet arrived, wait till the 
+                # targetblock arrives and then do the maximization
+                self.maybe_vote_last_checkpoint(self.processed[temptarget]) 
         else:
             self.vote_permission[blockheight] = True
             #print(blockheight)
