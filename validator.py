@@ -454,8 +454,9 @@ class VoteValidator(Validator):
         vote cast from highest justfied_checkpoint to a new block who's
         wait-time is up
         """
-        temp = 0
-        temptarget = None
+
+        temp        = 0     # max vote at given height
+        temptarget  = None  # most popular block
 
         # initialize
         if self.highest_justified_checkpoint.hash not in self.vote_count:
@@ -469,27 +470,11 @@ class VoteValidator(Validator):
                 temp = self.vote_count[self.highest_justified_checkpoint.hash][targethash]
                 temptarget = targethash
 
-        if temp > 0:
-            #print("DEBUG3")
-            #input()
-            if temptarget in self.processed:
-                #print("I am here")
-                #input()
-                #print(self.processed[temptarget].height)
-                #print(self.current_epoch)
-
-                # If the targetblock has not yet arrived, wait till the 
-                # targetblock arrives and then do the maximization
-                self.maybe_vote_last_checkpoint(self.processed[temptarget]) 
+        # vote for most popular if it is received
+        if temptarget in self.blocks_received:
+            self.maybe_vote_last_checkpoint(self.network.processed[temptarget]) 
         else:
-            self.vote_permission[blockheight] = True
-            #print(blockheight)
-            #print(self.current_epoch)
-
-            self.maybe_vote_last_checkpoint(self.first_block_height[blockheight])
-
-            #print('DEBUG4')
-            #input()
+            self.maybe_vote_last_checkpoint(self.first_block_height[blockheight]) 
 
     # Called on processing any object
     def on_receive(self, obj, sml_stats={}):
