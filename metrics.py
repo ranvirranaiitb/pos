@@ -381,7 +381,7 @@ def print_metrics_latency(num_tries,latencies, validator_set=VALIDATOR_IDS):
         print('supermajority link stats: {}'
                 .format(dict(Counter(sml_stats.values()))))
         print('=== END === ')
-   return (tp, delay, depth, mcf)
+    return (tp, delay, depth, mcf)
 
 if __name__ == '__main__':
     # LOG_DIR = 'metrics'
@@ -412,7 +412,7 @@ if __name__ == '__main__':
 
         # Uncomment to have different latencies
         #latencies = [i for i in range(10, 300, 20)] + [500, 750, 1000]
-        latencies = [2000]
+        latencies = [0,50,100,250]
         num_tries = 1
 
         tp, delay, depth, mcf = print_metrics_latency(num_tries,latencies, validator_set)
