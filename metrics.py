@@ -10,6 +10,7 @@ from validator import VoteValidator
 from plot_graph import plot_node_blockchains
 from collections import Counter
 from tqdm import tqdm
+from pandas import DataFrame
 
 def fraction_justified_and_finalized(validator):
     """Compute the fraction of justified and finalized checkpoints in the main chain.
@@ -206,6 +207,12 @@ def count_forks(validator):
 
 
 def print_metrics_latency(num_tries,latencies, validator_set=VALIDATOR_IDS):
+    # metrics for analysis
+    tp = []
+    delay = []
+    depth = []
+    mcf = []
+    
     for latency in latencies:
         jfsum = 0.0
         squarejfsum = 0.0
@@ -328,6 +335,11 @@ def print_metrics_latency(num_tries,latencies, validator_set=VALIDATOR_IDS):
 
         Etiming = Etiming/timing_count
         
+        tp += [Ethroughput]
+        delay += [Edelay/(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))]
+        depth += [depth_finalized]
+        mcf += [Emc/(EPOCH_SIZE*NUM_EPOCH + 1)]
+        
         print('=== Statistics ===')
         print('Latency: {}'
                 .format(latency))
@@ -369,7 +381,7 @@ def print_metrics_latency(num_tries,latencies, validator_set=VALIDATOR_IDS):
         print('supermajority link stats: {}'
                 .format(dict(Counter(sml_stats.values()))))
         print('=== END === ')
-
+   return (tp, delay, depth, mcf)
 
 if __name__ == '__main__':
     # LOG_DIR = 'metrics'
@@ -403,4 +415,14 @@ if __name__ == '__main__':
         latencies = [2000]
         num_tries = 1
 
-        print_metrics_latency(num_tries,latencies, validator_set)
+        tp, delay, depth, mcf = print_metrics_latency(num_tries,latencies, validator_set)
+        df = DataFrame({"latency":latencies,
+                        "throughput":tp,
+                        "mcf": mcf,
+                        "delay":delay,
+                        "depth":depth
+                        },
+                        index = latencies).T
+
+        df.to_excel('test.xlsx',sheet_name='sheet1',index=False)
+
