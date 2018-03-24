@@ -1,0 +1,156 @@
+``````````````````
+running test
+            PROTOCOL: vote-on-majority-after-delay
+            NUM_EPOCH: 500
+            SUPER_MAJORITY: 0.8
+            NUM_VALIDATORS: 100
+``````````````````
+height of connected of nodes: 100
+[499.0, 499.0, 499.0, 499.0]
+=== Statistics ===
+Latency: 0
+Timing: [101.         106.49196787 164.31927711 164.31927711 600.7995992
+ 606.28256513 664.10821643 664.10821643]
+Bar_graph: [106.49196787148594, 57.8273092369478, 436.480322089963, 5.48296593186376, 57.82565130260525, 0.0]
+Justified in forks: [0.0, 0.0]
+Main chain size (root included): [2496.0, 0.0]
+Probability of death: 0.0019992003198719965
+Blocks under main justified: [2496.0, 0.0]
+finalization_quartiles:[[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
+Main chain fraction:[0.998000799680128, 0.0]
+---new, incld. dead blocks---
+Delay:807.9754010270306
+Throughput:0.0019959759841604477
+depth:8.986
+---old, ignoring dead blocks---
+Delay:[806.3600963468486, 20073.18185209832]
+Throughput:[0.0019959759841604477, 0.0]
+supermajority link stats: {1: 499}
+=== END === 
+[428.0, 428.0, 428.0, 428.0]
+=== Statistics ===
+Latency: 50
+Timing: [119.75700935 191.1682243  286.4135514  307.30140187 700.13286713
+ 771.62470862 866.52102804 887.4135514 ]
+Bar_graph: [191.16822429906543, 95.24532710280371, 413.71931573099795, 71.49184149184157, 94.89631941267453, 20.89252336448601]
+Justified in forks: [0.0, 0.0]
+Main chain size (root included): [2151.0, 0.0]
+Probability of death: 0.13994402239104353
+Blocks under main justified: [2497.0, 0.0]
+finalization_quartiles:[[12.065420560747663, 15.97429906542056, 18.72429906542056, 20.89252336448598], [3.700899178533609, 3.944331461339811, 4.087668739470455, 4.274750928626197]]
+Main chain fraction:[0.8600559776089565, 0.0]
+---new, incld. dead blocks---
+Delay:1162.1569564081467
+Throughput:0.0017184333015550018
+depth:9.601517684990359
+---old, ignoring dead blocks---
+Delay:[999.5200372786579, 39128.94484547863]
+Throughput:[0.0017184333015550018, 0.0]
+supermajority link stats: {1: 428, 2: 1}
+=== END === 
+[306.0, 306.0, 306.0, 306.0]
+=== Statistics ===
+Latency: 100
+Timing: [ 153.7704918   272.27213115  454.00655738  496.50491803  936.9379085
+ 1055.66666667 1239.46405229 1283.98039216]
+Bar_graph: [272.27213114754096, 181.73442622950824, 482.9313511196828, 118.72875816993474, 183.79738562091507, 44.516339869280955]
+Justified in forks: [0.0, 0.0]
+Main chain size (root included): [1571.0, 0.0]
+Probability of death: 0.37185125949620157
+Blocks under main justified: [2494.0, 0.0]
+finalization_quartiles:[[24.65032679738562, 32.794117647058826, 38.666666666666664, 44.51633986928105], [8.137218809800004, 9.640605405650938, 12.750752893315966, 31.782266723862083]]
+Main chain fraction:[0.6281487405037984, 0.0]
+---new, incld. dead blocks---
+Delay:2228.029372575895
+Throughput:0.0012553190636041694
+depth:9.901195891797599
+---old, ignoring dead blocks---
+Delay:[1399.5338441890167, 166282.3242057839]
+Throughput:[0.0012553190636041694, 0.0]
+supermajority link stats: {1: 306, 2: 4}
+=== END === 
+[130.0, 130.0, 130.0, 130.0]
+=== Statistics ===
+Latency: 250
+Timing: [ 238.03870968  506.81935484  968.23225806 1090.42580645 1474.05769231
+ 1762.26282051 2208.36923077 2356.5       ]
+Bar_graph: [506.81935483870967, 461.4129032258065, 505.82543424317623, 288.2051282051282, 446.1064102564103, 148.13076923076915]
+Justified in forks: [0.0, 0.0]
+Main chain size (root included): [976.0, 0.0]
+Probability of death: 0.6097560975609756
+Blocks under main justified: [2475.0, 0.0]
+finalization_quartiles:[[73.45384615384616, 100.73076923076923, 122.29230769230769, 148.13076923076923], [43.78656477091882, 66.78320706257023, 96.27863778987818, 179.44595880146622]]
+Main chain fraction:[0.3902439024390244, 0.0]
+---new, incld. dead blocks---
+Delay:6624.886910860655
+Throughput:0.000783223748950681
+depth:13.428470178389093
+---old, ignoring dead blocks---
+Delay:[2585.3217213114754, 904865.1485445788]
+Throughput:[0.000783223748950681, 0.0]
+supermajority link stats: {1: 130, 2: 31, 3: 1}
+=== END === 
+[15.0, 15.0, 15.0, 15.0]
+=== Statistics ===
+Latency: 500
+Timing: [ 396.06451613  880.83870968 1861.83870968 2174.06451613 2358.90625
+ 2947.96875    3876.8        4669.86666667]
+Bar_graph: [880.8387096774194, 980.9999999999999, 497.0675403225807, 589.0625, 928.8312500000002, 793.0666666666666]
+Justified in forks: [0.0, 0.0]
+Main chain size (root included): [641.0, 0.0]
+Probability of death: 0.743702518992403
+Blocks under main justified: [2480.92, 0.11359999980777502]
+finalization_quartiles:[[244.73333333333332, 349.93333333333334, 449.26666666666665, 793.0666666666667], [168.8050025588368, 269.9843123014537, 375.56596698257357, 1109.0956957008814]]
+Main chain fraction:[0.256297481007597, 0.0]
+---new, incld. dead blocks---
+Delay:41615.11768688569
+Throughput:0.0005095852565614366
+depth:47.92623742728975
+---old, ignoring dead blocks---
+Delay:[10665.849834983499, 64731924.715074226]
+Throughput:[0.0005095852565614366, 0.0]
+supermajority link stats: {1: 15, 2: 21, 3: 8, 4: 5, 5: 3, 6: 1, 7: 1}
+=== END === 
+[1.0, 1.0, 1.0, 1.0]
+=== Statistics ===
+Latency: 1000
+Timing: [ 534.33333333 1556.         3361.33333333 3878.         3474.
+ 4776.75       4813.         5288.        ]
+Bar_graph: [1556.0, 1805.3333333333335, 112.66666666666652, 1302.75, 36.25, 475.0]
+Justified in forks: [0.0, 0.0]
+Main chain size (root included): [406.0, 0.0]
+Probability of death: 0.8376649340263894
+Blocks under main justified: [2413.0, 0.0]
+finalization_quartiles:[[316.0, 400.0, 442.0, 475.0], [0.0, 0.0, 0.0, 0.0]]
+Main chain fraction:[0.16233506597361055, 0.0]
+---new, incld. dead blocks---
+Delay:452030.7558164692
+Throughput:0.0003282720095254522
+depth:209.39159227985525
+---old, ignoring dead blocks---
+Delay:[73380.44256756757, 2284083106.8007545]
+Throughput:[0.0003282720095254522, 0.0]
+supermajority link stats: {1: 1, 2: 2, 3: 2, 4: 1, 8: 1, 16: 1, 19: 1, 20: 1, 21: 1, 22: 1}
+=== END === 
+``````````````````
+running test
+            PROTOCOL: vote-on-majority-after-delay
+            NUM_EPOCH: 500
+            SUPER_MAJORITY: 0.8
+            NUM_VALIDATORS: 100
+``````````````````
+height of connected of nodes: 100
+[0.0, 0.0, 0.0, 0.0]
+=== Statistics ===
+Latency: 2000
+Timing: [nan nan nan nan nan nan nan nan]
+Bar_graph: [nan, nan, nan, nan, nan, nan]
+Justified in forks: [0.0, 0.0]
+Main chain size (root included): [1.0, 0.0]
+Probability of death: 0.9996001599360256
+Blocks under main justified: [1.0, 0.0]
+finalization_quartiles:[[None, None, None, None], [None, None, None, None]]
+Main chain fraction:[0.00039984006397441024, 0.0]
+No finalization achieved
+supermajority link stats: {}
+=== END === 
