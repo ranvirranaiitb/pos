@@ -1,4 +1,5 @@
 from parameters import *
+from multiprocessing import Process
 
 class Network(object):
     """Networking layer controlling the delivery of messages between nodes.
@@ -54,7 +55,7 @@ class Network(object):
                 self.msg_arrivals[self.time + delay] = []
             self.msg_arrivals[self.time + delay].append((node.id, msg))
 
-
+    
     def tick(self, sml_stats = {}):
         """Simulates a tick of time.
 
@@ -69,7 +70,29 @@ class Network(object):
             n.tick(self.time)
         self.time += 1
         #print(self.time)
+    '''
+    def tick(self, sml_stats = {}):
+        """Simulates a tick of time.
 
+        Each node deals with receiving messages of time t.
+        Increments the time of each node, and of the network.
+        """
+        P = []
+        count = 0
+        if self.time in self.msg_arrivals:
+            for node_index, msg in self.msg_arrivals[self.time]:
+                P.append(Process(target =self.nodes[node_index].on_receive(msg, sml_stats)))
+                P[count].start()
+                count = count + 1
+            for i in range(0,count):
+                P[i].join()
+            del self.msg_arrivals[self.time]
+        for n in self.nodes:
+            n.tick(self.time)
+        self.time += 1
+        #print(self.time)
+    '''
+     
     def report_proposal(self,block):
         self.first_proposal_time[block.hash] = self.time
         self.processed[block.hash] = block

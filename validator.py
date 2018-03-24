@@ -82,6 +82,7 @@ class Validator(object):
             if desc.hash == anc.hash:
                 return True
             desc = self.get_checkpoint_parent(desc)
+        return False
 
     # Called every round
     def tick(self, time, sml_stats = {}):
