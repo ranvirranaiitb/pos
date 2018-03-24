@@ -76,7 +76,7 @@ class Validator(object):
         # Check that the blocks are both checkpoints
         assert anc.height % EPOCH_SIZE == 0
         assert desc.height % EPOCH_SIZE == 0
-        while True:
+        while desc.height >= anc.height:
             if desc is None:
                 return False
             if desc.hash == anc.hash:
