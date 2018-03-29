@@ -130,6 +130,8 @@ class VoteValidator(Validator):
         self.time_to_vote = {} # Height: int
         self.vote_permission = {} #Height:bool
         self.first_block_height={} #Height:block
+        self.type_1_vote = 0
+        self.type_2_vote = 0
 
     # TODO: we could write function is_justified only based on self.processed and self.votes
     #       (note that the votes are also stored in self.processed)
@@ -300,6 +302,7 @@ class VoteValidator(Validator):
                                 self.id)
                     self.network.broadcast(vote)
                     self.network.report_vote(vote)
+                    #print('Debug_vote_1')
 
                     del self.time_to_vote[block.height]
                     del self.vote_permission[block.height]
@@ -312,6 +315,16 @@ class VoteValidator(Validator):
                     #input()
                     '''
                     assert self.processed[target_block.hash]
+
+                    return True
+                else:
+                    return False
+            else:
+                return False
+        else:
+            return False
+
+
 
     def accept_vote(self, vote, sml_stats = {}):
         """Called on receiving a vote message.
@@ -449,13 +462,14 @@ class VoteValidator(Validator):
                 #input()
                 #print(self.processed[temptarget].height)
                 #print(self.current_epoch)
-                self.maybe_vote_last_checkpoint(self.processed[temptarget]) #If the targetblock has not yet arrived, wait till the targetblock arrives and then do the maximization
+                #print('This is happening')
+                self.type_1_vote += self.maybe_vote_last_checkpoint(self.processed[temptarget]) #If the targetblock has not yet arrived, wait till the targetblock arrives and then do the maximization
         else:
             self.vote_permission[blockheight] = True
             #print(blockheight)
             #print(self.current_epoch)
 
-            self.maybe_vote_last_checkpoint(self.first_block_height[blockheight])
+            self.type_2_vote += self.maybe_vote_last_checkpoint(self.first_block_height[blockheight])
 
             #print('DEBUG4')
             #input()

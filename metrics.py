@@ -10,6 +10,7 @@ from validator import VoteValidator
 #from plot_graph import plot_node_blockchains
 from collections import Counter
 from tqdm import tqdm
+from pandas import DataFrame
 
 def fraction_justified_and_finalized(validator):
     """Compute the fraction of justified and finalized checkpoints in the main chain.
@@ -68,7 +69,7 @@ def delay_throughput(network):
     if len(network.global_finalized_time)>0:
         throughput = max_epoch/(max_time)       #Removed min_time
     else:
-        throughput = 0  #max_time - min_time 
+        throughput = 0  #max_time - min_time
 
     return Edelay, E2delay, throughput, len(network.global_finalized_time)
 
@@ -123,7 +124,7 @@ def finalization_quartiles(network):
                 sumsquarequartiles[i] += network.final_quartiles[blockhash][i]**2
                 len_valid_sums[i] +=1
     '''
-    for i in range(4):            
+    for i in range(4):
         if len_valid_sums[i]>0:
             Equartiles[i] = Equartiles[i]/len_valid_sums[i]
             E2quartiles[i] = E2quartiles[i]/len_valid_sums[i]
@@ -206,6 +207,12 @@ def count_forks(validator):
 
 
 def print_metrics_latency(num_tries,latencies,wait_fractions, validator_set=VALIDATOR_IDS):
+    # metrics for analysis
+    tp = []
+    delay = []
+    depth = []
+    mcf = []
+
     for latency in latencies:
 
         #fcsum = {}
@@ -246,6 +253,8 @@ def print_metrics_latency(num_tries,latencies,wait_fractions, validator_set=VALI
             sml_stats = {}
             depth_finalized = 0
             num_depth_finalized = 0
+            sum_type_1_vote = 0
+            sum_type_2_vote = 0
 
             for i in range(num_tries):
                 network = Network(exponential_latency(latency))
@@ -269,10 +278,12 @@ def print_metrics_latency(num_tries,latencies,wait_fractions, validator_set=VALI
                     squaremcsum += main_chain_size(val)**2
                     busum += blocks_under_highest_justified(val)
                     squarebusum += blocks_under_highest_justified(val)**2
-                    temp_depth_finalized = val.depth_finalized 
+                    temp_depth_finalized = val.depth_finalized
                     temp_num_depth_finalized = val.num_depth_finalized
                     num_depth_finalized += temp_num_depth_finalized
                     depth_finalized += temp_depth_finalized
+                    sum_type_1_vote += val.type_1_vote
+                    sum_type_2_vote += val.type_2_vote
 
                     #fc = count_forks(val)
                     #for l in fc.keys():
@@ -289,7 +300,7 @@ def print_metrics_latency(num_tries,latencies,wait_fractions, validator_set=VALI
 
                 tempEquartiles,tempE2quartiles,templen_valid_sums = finalization_quartiles(network)
                 for i in range(4):
-                    if templen_valid_sums[i]>0 :   
+                    if templen_valid_sums[i]>0 :
                         Equartiles[i] += tempEquartiles[i]
                         E2quartiles[i] += tempE2quartiles[i]
                         len_valid_sums[i] += templen_valid_sums[i]
@@ -298,7 +309,7 @@ def print_metrics_latency(num_tries,latencies,wait_fractions, validator_set=VALI
                 Etiming += temp_timing
                 timing_count += temp_timing_count
 
-            sd_delay = 0    
+            sd_delay = 0
             if total_finalized > 0 :
                 Edelay = delaysum/total_finalized
                 E2delay = squaredelaysum/total_finalized
@@ -306,12 +317,12 @@ def print_metrics_latency(num_tries,latencies,wait_fractions, validator_set=VALI
                 sd_delay = np.sqrt(vardelay)
                 Ethroughput = throughputsum/num_finalized_tries
                 E2throughput = squarethroughputsum/num_finalized_tries
-                varthroughput = E2throughput - Ethroughput**2    
+                varthroughput = E2throughput - Ethroughput**2
             else:
                 finalization_achieved = False
                 #print('No finalization Achieved')
-            
-            for i in range(4):            
+
+            for i in range(4):
                 if len_valid_sums[i]>0:
                     Equartiles[i] = Equartiles[i]/len_valid_sums[i]
                     E2quartiles[i] = E2quartiles[i]/len_valid_sums[i]
@@ -341,7 +352,12 @@ def print_metrics_latency(num_tries,latencies,wait_fractions, validator_set=VALI
             depth_finalized = depth_finalized/num_depth_finalized
 
             Etiming = Etiming/timing_count
-            
+
+            tp += [Ethroughput]
+            delay += [Edelay/(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))]
+            depth += [depth_finalized]
+            mcf += [Emc/(EPOCH_SIZE*NUM_EPOCH + 1)]
+
             print('=== Statistics ===')
             print('Latency: {}'
                     .format(latency))
@@ -364,7 +380,9 @@ def print_metrics_latency(num_tries,latencies,wait_fractions, validator_set=VALI
             print('Main chain fraction:{}'
                     .format([Emc/(EPOCH_SIZE*NUM_EPOCH + 1),        # include ROOT
                             np.sqrt(varmc)/EPOCH_SIZE/NUM_EPOCH ]))
-
+            print('type_1_vote: {}'.format(sum_type_1_vote))
+            print('type_2_vote: {}'.format(sum_type_2_vote))
+            
             if finalization_achieved :
                 print('---new, incld. dead blocks---')
                 print('Delay:{}'
@@ -399,6 +417,8 @@ def print_metrics_latency(num_tries,latencies,wait_fractions, validator_set=VALI
         print('MCF_list: {}'.format(MCF_list))
         print('old_delay_list: {}'.format(old_delay_list))
 
+        return (tp, delay, depth, mcf)
+
 
 if __name__ == '__main__':
     # LOG_DIR = 'metrics'
@@ -424,13 +444,24 @@ if __name__ == '__main__':
     for fraction_disconnected in fractions:
         num_validators = int((1.0 - fraction_disconnected) * NUM_VALIDATORS)
         validator_set = VALIDATOR_IDS[:num_validators]
-        
+
         print("height of connected of nodes: {}".format(len(validator_set)))
 
         # Uncomment to have different latencies
         #latencies = [i for i in range(10, 300, 20)] + [500, 750, 1000]
         latencies = [100]
-        wait_fractions =  [0.0,0.1,0.2,0.5,1.0,1.5,2.0,3.0,5.0,10.0]  #[0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.75,2.0,2.5,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10]
+        wait_fractions =  [0.0,0.1,0.2,0.5,1.0,1.5,2.0,3.0,5.0,10.0]
+        # wait_fractoins = [0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.75,2.0,2.5,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10]
         num_tries = 1
 
-        print_metrics_latency(num_tries,latencies,wait_fractions, validator_set)
+        tp, delay, depth, mcf = print_metrics_latency(num_tries,latencies, wait_fractions, validator_set)
+        # save data to test.xlsx 
+        df = DataFrame({"latency":latencies,
+                        "throughput":tp,
+                        "mcf": mcf,
+                        "delay":delay,
+                        "depth":depth
+                        },
+                        index = wait_fractions).T
+
+        df.to_excel('test.xlsx',sheet_name='sheet1',index=False)
