@@ -6,7 +6,7 @@ class Network(object):
     self.msg_arrivals is a table where the keys are the time of arrival of
         messages and the values is a list of the objects received at that time
     """
-    def __init__(self, latency_fn):
+    def __init__(self, adj_list, latency_fn):
         self.nodes = []
         self.time = 0
         self.msg_arrivals = {}
@@ -15,7 +15,7 @@ class Network(object):
         self.vote_count = {}
 
         self.processed = {}
-        
+
         self.first_proposal_time = {}
         self.first_justification_time = {}
         self.global_justified_time ={}
@@ -129,6 +129,3 @@ class Network(object):
         temp = NUM_VALIDATORS//4
         if len(self.final_validator[blockhash])%temp == 0 :
             self.final_quartiles[blockhash].append(self.time-self.quartile_first_finalized_time[blockhash])
-
-
-

@@ -11,6 +11,7 @@ from validator import VoteValidator
 from collections import Counter
 from tqdm import tqdm
 from pandas import DataFrame
+import networkx as nx
 
 def fraction_justified_and_finalized(validator):
     """Compute the fraction of justified and finalized checkpoints in the main chain.
@@ -206,56 +207,57 @@ def count_forks(validator):
     return count_forks
 
 
-def print_metrics_latency(num_tries,latencies,wait_fractions, validator_set=VALIDATOR_IDS):
+def print_metrics_latency (G, num_tries, latencies,
+                          wait_fractions, validator_set=VALIDATOR_IDS):
     # metrics for analysis
-    tp = []
-    delay = []
-    depth = []
-    mcf = []
+    tp      = []
+    delay   = []
+    depth   = []
+    mcf     = []
 
     for latency in latencies:
 
         #fcsum = {}
-        new_delay_list = []
-        old_delay_list = []
-        tp_list = []
-        depth_list = []
-        wait_fraction_list=[]
-        MCF_list = []
+        new_delay_list      = []
+        old_delay_list      = []
+        tp_list             = []
+        depth_list          = []
+        wait_fraction_list  = []
+        MCF_list            = []
 
         for wf in wait_fractions:
 
             print('wait_fraction: {}'.format(wf))
 
-            jfsum = 0.0
-            squarejfsum = 0.0
-            ffsum = 0.0
-            squareffsum = 0.0
-            jffsum = 0.0
-            squarejffsum = 0.0
-            mcsum = 0.0
-            squaremcsum = 0.0
-            busum = 0.0
-            squarebusum = 0.0
-            delaysum = 0.0
-            squaredelaysum = 0.0
-            throughputsum = 0.0
-            squarethroughputsum = 0.0
-            total_finalized = 0.0
-            num_finalized_tries = 0.0
-            finalization_achieved = True
-            Equartiles = [0.0,0.0,0.0,0.0]
-            E2quartiles = [0.0,0.0,0.0,0.0]
-            stdquartiles = [0.0,0.0,0.0,0.0]
-            len_valid_sums = [0.0,0.0,0.0,0.0]
-            Etiming = np.zeros((8))
-            timing_count = np.zeros((8))
-            sml_stats = {}
-            depth_finalized = 0
-            num_depth_finalized = 0
+            jfsum                   = 0.0
+            squarejfsum             = 0.0
+            ffsum                   = 0.0
+            squareffsum             = 0.0
+            jffsum                  = 0.0
+            squarejffsum            = 0.0
+            mcsum                   = 0.0
+            squaremcsum             = 0.0
+            busum                   = 0.0
+            squarebusum             = 0.0
+            delaysum                = 0.0
+            squaredelaysum          = 0.0
+            throughputsum           = 0.0
+            squarethroughputsum     = 0.0
+            total_finalized         = 0.0
+            num_finalized_tries     = 0.0
+            finalization_achieved   = True
+            Equartiles              = [0.0,0.0,0.0,0.0]
+            E2quartiles             = [0.0,0.0,0.0,0.0]
+            stdquartiles            = [0.0,0.0,0.0,0.0]
+            len_valid_sums          = [0.0,0.0,0.0,0.0]
+            Etiming                 = np.zeros((8))
+            timing_count            = np.zeros((8))
+            sml_stats               = {}
+            depth_finalized         = 0
+            num_depth_finalized     = 0
 
             for i in range(num_tries):
-                network = Network(exponential_latency(latency))
+                network = Network(G.adj, exponential_latency(latency))
                 validators = [VoteValidator(network,latency,wf, i) for i in validator_set]
 
                 for t in tqdm(range(BLOCK_PROPOSAL_TIME * EPOCH_SIZE * NUM_EPOCH)):
@@ -429,10 +431,12 @@ if __name__ == '__main__':
             PROTOCOL: vote-on-majority-after-delay
             NUM_EPOCH: {}
             SUPER_MAJORITY: {}
-            NUM_VALIDATORS: {}""".
+            NUM_VALIDATORS: {}
+            D_REGULAR: {}""".
             format(NUM_EPOCH,
                    SUPER_MAJORITY,
-                   NUM_VALIDATORS))
+                   NUM_VALIDATORS,
+                   D_REGULAR))
     print('``````````````````')
 
     for fraction_disconnected in fractions:
@@ -441,15 +445,20 @@ if __name__ == '__main__':
 
         print("height of connected of nodes: {}".format(len(validator_set)))
 
-        # Uncomment to have different latencies
+        num_tries = 1
         #latencies = [i for i in range(10, 300, 20)] + [500, 750, 1000]
         latencies = [100]
         wait_fractions =  [0.0,0.1,0.2,0.5,1.0,1.5,2.0,3.0,5.0,10.0]
-        # wait_fractoins = [0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.75,2.0,2.5,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10]
-        num_tries = 1
 
-        tp, delay, depth, mcf = print_metrics_latency(num_tries,latencies, wait_fractions, validator_set)
-        # save data to test.xlsx 
+        # Graph
+        # G = nx.complete_graph(num_validators)                # fully connected
+        G = nx.random_regular_graph(D_REGULAR,num_validators)  # d-regular
+
+        tp, delay, depth, mcf = print_metrics_latency(G, num_tries,latencies, \
+                                                      wait_fractions,
+                                                      validator_set)
+
+        # save data to test.xlsx
         df = DataFrame({"latency":latencies,
                         "throughput":tp,
                         "mcf": mcf,
