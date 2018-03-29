@@ -1,4 +1,5 @@
 from parameters import *
+from utils import *
 
 class Network(object):
     """Networking layer controlling the delivery of messages between nodes.
@@ -7,7 +8,9 @@ class Network(object):
         messages and the values is a list of the objects received at that time
     """
     def __init__(self, adj_list, latency_fn):
-        self.nodes = []
+
+        self.adj_list = adj_list        # dict of dict of dict (networkx docs)
+        self.nodes = []                 # list of nodes
         self.time = 0
         self.msg_arrivals = {}
         self.latency_fn = latency_fn
@@ -36,22 +39,30 @@ class Network(object):
         self.justify_validator={}
         self.final_time={}
 
-    def broadcast(self, msg):
-        """Broadcasts a message to all nodes in the network. (with latency)
+    def broadcast(self, msg, src):
+        """
+        Broadcasts a message to all nodes in the network. (with latency)
+        Msg arrivals determine by graph adj_list
 
         Inputs:
             msg: the message to be broadcastes (PREPARE or COMMIT).
+            src: the source of the spread (node.id)
 
         Returns:
             None
         """
+        # generate delays for all nodes
+        delays = generate_latencies(self.latency_fn, self.adj_list, src)
+        
         for node in self.nodes:
-            # Create a different delay for every receiving node i
+            delay = delays[node.id]
+
             # Delays need to be at least 1
-            delay = self.latency_fn()
             assert delay >= 1, "delay is 0, which will lose some messages !"
+
             if self.time + delay not in self.msg_arrivals:
                 self.msg_arrivals[self.time + delay] = []
+
             self.msg_arrivals[self.time + delay].append((node.id, msg))
 
 

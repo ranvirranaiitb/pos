@@ -93,7 +93,7 @@ class Validator(object):
         if self.id == (time // BLOCK_PROPOSAL_TIME) % NUM_VALIDATORS and time % BLOCK_PROPOSAL_TIME == 0:
             # One node is authorized to create a new block and broadcast it
             new_block = Block(self.head, self.finalized_dynasties)
-            self.network.broadcast(new_block)
+            self.network.broadcast(new_block, self.id)
             self.network.report_proposal(new_block)
             self.on_receive(new_block, sml_stats)  # immediately "receive" the new block (no network latency)
 
@@ -298,7 +298,7 @@ class VoteValidator(Validator):
                                 source_block.epoch,
                                 target_block.epoch,
                                 self.id)
-                    self.network.broadcast(vote)
+                    self.network.broadcast(vote, self.id)
                     self.network.report_vote(vote)
 
                     del self.time_to_vote[block.height]
@@ -396,7 +396,7 @@ class VoteValidator(Validator):
             if vote.epoch_target > self.highest_justified_checkpoint.epoch:
                 self.highest_justified_checkpoint = self.processed[vote.target]
                 #self.time_to_vote = self.network.time + np.random.uniform(0,VOTING_DELAY)
-    
+
             # If the source was a direct parent of the target, the source
             # is finalized
             if vote.epoch_source == vote.epoch_target - 1:
@@ -420,7 +420,7 @@ class VoteValidator(Validator):
             else:
                 self.vote_permission = True
     '''
-                
+
     def vote_on_delay(self):
         for blockheight in range((self.current_epoch+1)*EPOCH_SIZE,self.head.height,EPOCH_SIZE):
             if blockheight in self.time_to_vote:
@@ -483,7 +483,7 @@ class VoteValidator(Validator):
         elif isinstance(obj, Vote):
             val = self.check_vote_validity(obj)
             if val:
-                o = self.accept_vote(obj, sml_stats)    
+                o = self.accept_vote(obj, sml_stats)
         # If the object was successfully processed
         # (ie. not flagged as having unsatisfied dependencies)
         if val:
