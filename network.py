@@ -1,4 +1,5 @@
 from parameters import *
+from utils import latency_fn
 
 class Network(object):
     """Networking layer controlling the delivery of messages between nodes.
@@ -6,13 +7,14 @@ class Network(object):
     self.msg_arrivals is a table where the keys are the time of arrival of
         messages and the values is a list of the objects received at that time
     """
-    def __init__(self, latency_fn):
+    def __init__(self, avg_latency,ADJ):
         self.nodes = []
         self.time = 0
         self.msg_arrivals = {}
-        self.latency_fn = latency_fn
+        self.avg_latency = avg_latency
         self.supermajority_link = {}
         self.vote_count = {}
+        self.ADJ = ADJ
 
         self.processed = {}
         
@@ -36,7 +38,7 @@ class Network(object):
         self.justify_validator={}
         self.final_time={}
 
-    def broadcast(self, msg):
+    def broadcast(self, msg, source_node):
         """Broadcasts a message to all nodes in the network. (with latency)
 
         Inputs:
@@ -45,10 +47,18 @@ class Network(object):
         Returns:
             None
         """
+        final_delay = latency_fn(self.avg_latency,self.ADJ,source_node)
         for node in self.nodes:
             # Create a different delay for every receiving node i
             # Delays need to be at least 1
-            delay = self.latency_fn()
+            '''
+            if node != source_node:
+                delay = latency_fn(self.avg_latency,self.ADJ,source_node, node)
+            else:
+                delay=1
+            '''
+
+            delay = final_delay[node.id]
             assert delay >= 1, "delay is 0, which will lose some messages !"
             if self.time + delay not in self.msg_arrivals:
                 self.msg_arrivals[self.time + delay] = []

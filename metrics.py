@@ -204,7 +204,7 @@ def count_forks(validator):
     return count_forks
 
 
-def print_metrics_latency(num_tries,latencies, validator_set=VALIDATOR_IDS):
+def print_metrics_latency(num_tries,latencies ,ADJ, validator_set=VALIDATOR_IDS):
     for latency in latencies:
         jfsum = 0.0
         squarejfsum = 0.0
@@ -235,7 +235,7 @@ def print_metrics_latency(num_tries,latencies, validator_set=VALIDATOR_IDS):
         #fcsum = {}
 
         for i in range(num_tries):
-            network = Network(exponential_latency(latency))
+            network = Network(latency,ADJ)
             validators = [VoteValidator(network, i) for i in validator_set]
 
             for t in tqdm(range(BLOCK_PROPOSAL_TIME * EPOCH_SIZE * NUM_EPOCH)):
@@ -350,6 +350,91 @@ def print_metrics_latency(num_tries,latencies, validator_set=VALIDATOR_IDS):
         print('')
 
 
+def generate_random_regular_graph(deg):
+    A = np.zeros((NUM_VALIDATORS,NUM_VALIDATORS))
+    A_neighbors = np.sum(A,1)
+    for i in range(NUM_VALIDATORS-1):
+        A_neighbors = np.sum(A,1)
+        temp = A_neighbors[i]
+        while temp<deg:
+            print (temp)
+            print(i)
+            tempvar = np.random.randint(i+1,NUM_VALIDATORS)
+            if A[i,tempvar] ==0 and np.sum(A,1)[tempvar]<deg:
+                A[i,tempvar]=1
+                A[tempvar,i]=1
+                #temp = temp+1
+                #print(i,tempvar)
+            else:
+                pass
+            temp = np.sum(A,1)[i]
+        #print(temp)
+        
+    return A
+
+def generate_deterministic_regular_graph(deg):
+    A = np.zeros((NUM_VALIDATORS,NUM_VALIDATORS))
+    A_neighbors = np.sum(A,1)
+    for i in range(NUM_VALIDATORS-1):
+        A_neighbors = np.sum(A,1)
+        temp = A_neighbors[i]
+        diff = int((deg - temp)/(NUM_VALIDATORS-i-1))
+        while temp<deg:
+            print (temp)
+            print(i)
+            tempvar = i + diff + np.random.randint(0,2)
+            if (A[i,tempvar] ==0) and (np.sum(A,1)[tempvar]<deg):
+                A[i,tempvar]=1
+                A[tempvar,i]=1
+                #temp = temp+1
+                #print(i,tempvar)
+            else:
+                pass
+            temp = np.sum(A,1)[i]
+        #print(temp)
+        
+    return A
+
+def generate_unidirectional_regular_graph(deg):
+    A = np.zeros((NUM_VALIDATORS,NUM_VALIDATORS))
+    A_vert = np.sum(A,0)
+    for i in range(NUM_VALIDATORS-1):
+        A_vert = np.sum(A,0)
+        temp =0
+        while temp<deg:
+            tempvar = np.random.randint(0,NUM_VALIDATORS)
+            if tempvar != i and A[i][tempvar]==0 and np.sum(A,0)[tempvar]<min((deg-(100-i)/15),deg):
+                A[i][tempvar] = 1
+                temp = temp +1
+            #print(temp)
+            #print(i)
+    for j in range(NUM_VALIDATORS-1):
+        if np.sum(A,0)[j]<deg:
+            A[NUM_VALIDATORS-1][j] = 1
+
+    print(np.sum(A,0))
+    print(np.sum(A,1))
+
+    return A
+
+def generate_fixed_unidirectional_regular_graph(deg):
+    A = np.zeros((NUM_VALIDATORS,NUM_VALIDATORS))
+    for i in range(NUM_VALIDATORS):
+        temp = 0
+        count = 0
+        while  temp<deg:
+            temp2 = (8*i + count + 1)%NUM_VALIDATORS
+            if temp2==i:
+                pass
+            else:
+                A[i][temp2] = 1
+                temp = temp+1
+            count +=1
+            
+        
+
+    return A
+
 if __name__ == '__main__':
     # LOG_DIR = 'metrics'
     # if not os.path.exists(LOG_DIR):
@@ -368,6 +453,13 @@ if __name__ == '__main__':
                     SUPER_MAJORITY))
     print('``````````````````')
 
+    deg = 8
+
+    ADJ = generate_fixed_unidirectional_regular_graph(deg)
+
+
+    print('Generated graph')
+
     for fraction_disconnected in fractions:
         num_validators = int((1.0 - fraction_disconnected) * NUM_VALIDATORS)
         validator_set = VALIDATOR_IDS[:num_validators]
@@ -380,4 +472,4 @@ if __name__ == '__main__':
         latencies = [0,50,100,250,500,1000]
         num_tries = 1
 
-        print_metrics_latency(num_tries,latencies, validator_set)
+        print_metrics_latency(num_tries,latencies,ADJ, validator_set)

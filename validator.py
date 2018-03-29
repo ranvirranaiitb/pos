@@ -84,7 +84,7 @@ class Validator(object):
         if self.id == (time // BLOCK_PROPOSAL_TIME) % NUM_VALIDATORS and time % BLOCK_PROPOSAL_TIME == 0:
             # One node is authorized to create a new block and broadcast it
             new_block = Block(self.head, self.finalized_dynasties)
-            self.network.broadcast(new_block)
+            self.network.broadcast(new_block, self.id)
             self.network.report_proposal(new_block)
             self.on_receive(new_block, sml_stats)  # immediately "receive" the new block (no network latency)
 
@@ -274,7 +274,7 @@ class VoteValidator(Validator):
                             source_block.epoch,
                             target_block.epoch,
                             self.id)
-                self.network.broadcast(vote)
+                self.network.broadcast(vote, self.id)
                 self.network.report_vote(vote)
                 assert self.processed[target_block.hash]
 
