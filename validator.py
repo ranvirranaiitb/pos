@@ -10,7 +10,7 @@ ROOT = Block()
 class Validator(object):
     """Abstract class for validators."""
 
-    def __init__(self, network,latency, wait_fraction, id):
+    def __init__(self, network,latency, wait_fraction, id, immediate_vote):
         # processed blocks
         self.processed = {ROOT.hash: ROOT}
         # Messages that are not processed yet, and require another message
@@ -44,7 +44,7 @@ class Validator(object):
 
         self.voting_delay_average = latency*wait_fraction
         self.mining_id = id             #Mining id, shuffeled after every proposal
-
+        self.immediate_vote = immediate_vote
 
     # If we processed an object but did not receive some dependencies
     # needed to process it, save it to be processed later
@@ -92,7 +92,8 @@ class Validator(object):
         # At time 0: validator 0
         # At time BLOCK_PROPOSAL_TIME: validator 1
         # .. At time NUM_VALIDATORS * BLOCK_PROPOSAL_TIME: validator 0
-        self.vote_on_delay()
+        if not self.immediate_vote:
+            self.vote_on_delay()
         if self.mining_id == (time // BLOCK_PROPOSAL_TIME) % NUM_VALIDATORS and time % BLOCK_PROPOSAL_TIME == 0:
             # One node is authorized to create a new block and broadcast it
             new_block = Block(self.head, self.finalized_dynasties)
@@ -103,8 +104,8 @@ class Validator(object):
 class VoteValidator(Validator):
     """Add the vote messages + slashing conditions capability"""
 
-    def __init__(self, network, latency, wait_fraction, id, vote_as_block):
-        super(VoteValidator, self).__init__(network, latency,wait_fraction, id)
+    def __init__(self, network, latency, wait_fraction, id, vote_as_block, immediate_vote):
+        super(VoteValidator, self).__init__(network, latency,wait_fraction, id,immediate_vote)
         # the head is the latest block processed descendant of the highest
         # justified checkpoint
         self.head = ROOT
@@ -136,6 +137,7 @@ class VoteValidator(Validator):
         self.type_1_vote = 0
         self.type_2_vote = 0
         self.vote_as_block = vote_as_block
+        
 
     # TODO: we could write function is_justified only based on self.processed and self.votes
     #       (note that the votes are also stored in self.processed)
@@ -207,8 +209,8 @@ class VoteValidator(Validator):
                 self.time_to_vote[block.height] = self.network.time + 1 + int(random.expovariate(1) * self.voting_delay_average)
                 self.vote_permission[block.height] = False
 
-            #if self.vote_permission.get(block.height,False):
-            #    self.maybe_vote_last_checkpoint(block)
+            if self.immediate_vote:
+                self.maybe_vote_last_checkpoint(block)
 
         # Otherwise...
         else:
@@ -375,10 +377,17 @@ class VoteValidator(Validator):
 
         # Initialize self.votes[vote.sender] if necessary
         if self.vote_as_block:
-            if vote.source not in self.blocks_received:
-                self.accept_block(self.network.processed[vote.source])    
-            if vote.target not in self.blocks_received:
-                self.accept_block(self.network.processed[vote.target])
+            temphash = vote.source
+            for i in range(EPOCH_SIZE):
+                if temphash not in self.blocks_received:
+                    self.accept_block(self.network.processed[temphash])
+                    temphash = self.network.processed[temphash].prev_hash
+                	
+            temphash = vote.target
+            for i in range(EPOCH_SIZE):
+                if temphash not in self.blocks_received:
+                    self.accept_block(self.network.processed[temphash])
+                    temphash = self.network.processed[temphash].prev_hash   
 
         if vote.sender not in self.votes:
             self.votes[vote.sender] = []

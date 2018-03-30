@@ -209,7 +209,7 @@ def count_forks(validator):
 
 
 def print_metrics_latency (G, num_tries, latencies,
-                          wait_fractions, vote_as_block, validator_set=VALIDATOR_IDS):
+                          wait_fractions, vote_as_block, immediate_vote, validator_set=VALIDATOR_IDS):
     # metrics for analysis
     tp      = []
     delay   = []
@@ -262,7 +262,7 @@ def print_metrics_latency (G, num_tries, latencies,
 
             for i in range(num_tries):
                 network = Network(G.adj, latency)
-                validators = [VoteValidator(network,latency,wf, i,vote_as_block) for i in validator_set]
+                validators = [VoteValidator(network,latency,wf, i,vote_as_block, immediate_vote) for i in validator_set]
 
                 for t in tqdm(range(BLOCK_PROPOSAL_TIME * EPOCH_SIZE * NUM_EPOCH)):
                     network.tick(sml_stats)
@@ -439,7 +439,8 @@ if __name__ == '__main__':
     # fractions = np.arange(0.0, 0.4, 0.05)
     # fractions = [0.31, 0.32, 0.33]
     fractions = [0.0]
-    vote_as_block = True
+    vote_as_block = False
+    immediate_vote = True
 
     print('``````````````````')
     print("""running test
@@ -448,12 +449,14 @@ if __name__ == '__main__':
             SUPER_MAJORITY: {}
             NUM_VALIDATORS: {}
             D_REGULAR: {}
-            Vote_as_block: {}""".
+            Vote_as_block: {}
+            Immediate_vote: {}""".
             format(NUM_EPOCH,
                    SUPER_MAJORITY,
                    NUM_VALIDATORS,
                    D_REGULAR,
-                   vote_as_block))
+                   vote_as_block,
+                   immediate_vote))
     print('``````````````````')
 
     for fraction_disconnected in fractions:
@@ -465,7 +468,7 @@ if __name__ == '__main__':
         num_tries = 1
         #latencies = [i for i in range(10, 300, 20)] + [500, 750, 1000]
         latencies = [100]
-        wait_fractions =  [0.0,0.1,0.2,0.5,1.0,1.5,2.0,3.0,5.0,10.0]
+        wait_fractions =  [0.0]
         
 
         # Graph
@@ -475,6 +478,7 @@ if __name__ == '__main__':
         tp, delay, depth, mcf = print_metrics_latency(G, num_tries,latencies, \
                                                       wait_fractions,
                                                         vote_as_block,
+                                                        immediate_vote,
                                                         validator_set)
 
         # save data to test.xlsx
