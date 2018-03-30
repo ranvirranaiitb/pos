@@ -37,7 +37,7 @@ class Validator(object):
         self.tail_membership = {ROOT.hash: ROOT.hash}
         self.id = id
         self.network.report_proposal(ROOT)
-
+        self.blocks_received = {ROOT.hash}
 
         #self.latency = latency
         #self.wait_fraction = wait_fraction
@@ -103,7 +103,7 @@ class Validator(object):
 class VoteValidator(Validator):
     """Add the vote messages + slashing conditions capability"""
 
-    def __init__(self, network, latency, wait_fraction, id):
+    def __init__(self, network, latency, wait_fraction, id, vote_as_block):
         super(VoteValidator, self).__init__(network, latency,wait_fraction, id)
         # the head is the latest block processed descendant of the highest
         # justified checkpoint
@@ -135,6 +135,7 @@ class VoteValidator(Validator):
         self.first_block_height={} #Height:block
         self.type_1_vote = 0
         self.type_2_vote = 0
+        self.vote_as_block = vote_as_block
 
     # TODO: we could write function is_justified only based on self.processed and self.votes
     #       (note that the votes are also stored in self.processed)
@@ -179,6 +180,9 @@ class VoteValidator(Validator):
         Returns:
             True if block was accepted or False if we are missing dependencies
         """
+
+        self.blocks_received.add(block.hash)
+
         # If we didn't receive the block's parent yet, wait
         if block.prev_hash not in self.processed:
             self.add_dependency(block.prev_hash, block)
@@ -370,6 +374,12 @@ class VoteValidator(Validator):
         '''
 
         # Initialize self.votes[vote.sender] if necessary
+        if self.vote_as_block:
+            if vote.source not in self.blocks_received:
+                self.accept_block(self.network.processed[vote.source])    
+            if vote.target not in self.blocks_received:
+                self.accept_block(self.network.processed[vote.target])
+
         if vote.sender not in self.votes:
             self.votes[vote.sender] = []
 

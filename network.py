@@ -8,13 +8,14 @@ class Network(object):
     self.msg_arrivals is a table where the keys are the time of arrival of
         messages and the values is a list of the objects received at that time
     """
-    def __init__(self, adj_list, latency_fn):
+    def __init__(self, adj_list, avg_latency):
 
         self.adj_list = adj_list        # dict of dict of dict (networkx docs)
         self.nodes = []                 # list of nodes
         self.time = 0
         self.msg_arrivals = {}
-        self.latency_fn = latency_fn
+        #self.latency_fn = latency_fn
+        self.avg_latency = avg_latency
         self.supermajority_link = {}
         self.vote_count = {}
 
@@ -53,7 +54,7 @@ class Network(object):
             None
         """
         # generate delays for all nodes
-        delays = generate_latencies(self.latency_fn, self.adj_list, src)
+        delays = generate_latencies(self.avg_latency , self.adj_list, src)
         
         for node in self.nodes:
             delay = delays[node.id]
