@@ -93,7 +93,7 @@ class Validator(object):
         # At time BLOCK_PROPOSAL_TIME: validator 1
         # .. At time NUM_VALIDATORS * BLOCK_PROPOSAL_TIME: validator 0
         self.vote_on_delay()
-        if self.id == (time // BLOCK_PROPOSAL_TIME) % NUM_VALIDATORS and time % BLOCK_PROPOSAL_TIME == 0:
+        if self.mining_id == (time // BLOCK_PROPOSAL_TIME) % NUM_VALIDATORS and time % BLOCK_PROPOSAL_TIME == 0:
             # One node is authorized to create a new block and broadcast it
             new_block = Block(self.head, self.finalized_dynasties)
             self.network.broadcast(new_block, self.id)
