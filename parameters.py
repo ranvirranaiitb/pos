@@ -11,3 +11,6 @@ AVG_LATENCY = 10  # average latency of the network (in number of ticks)
 NUM_EPOCH = 500
 #VOTING_DELAY = 2*BLOCK_PROPOSAL_TIME+1
 SUPER_MAJORITY = 0.8
+
+# graph properties
+D_REGULAR = 6
