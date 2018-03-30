@@ -38,10 +38,13 @@ class Validator(object):
         self.id = id
         self.network.report_proposal(ROOT)
 
+
         #self.latency = latency
         #self.wait_fraction = wait_fraction
 
         self.voting_delay_average = latency*wait_fraction
+        self.mining_id = id             #Mining id, shuffeled after every proposal
+
 
     # If we processed an object but did not receive some dependencies
     # needed to process it, save it to be processed later
@@ -331,7 +334,8 @@ class VoteValidator(Validator):
         """
         # print('Node %d: got a vote' % self.id, source.view, prepare.view_source,
               # prepare.blockhash, vote.blockhash in self.processed)
-
+        
+        '''
        # If the block has not yet been processed, wait
         if vote.source not in self.processed:
             self.add_dependency(vote.source, vote)
@@ -347,19 +351,23 @@ class VoteValidator(Validator):
         if vote.target not in self.processed:
             self.add_dependency(vote.target, vote)
             return False
+        '''
 
         # If the target is not a descendent of the source, ignore the vote
+        '''
         if not self.is_ancestor(vote.source, vote.target):
             return False
+        '''
 
         # If the sender is not in the block's dynasty, ignore the vote
         # TODO: is it really vote.target? (to check dynasties)
         # TODO: reorganize dynasties like the paper
         #*****************Dynasty management not implemented************************************
-
+        '''
         if vote.sender not in self.processed[vote.target].current_dynasty.validators and \
             vote.sender not in self.processed[vote.target].prev_dynasty.validators:
             return False
+        '''
 
         # Initialize self.votes[vote.sender] if necessary
         if vote.sender not in self.votes:
@@ -380,44 +388,72 @@ class VoteValidator(Validator):
                 return False
 
         # Add the vote to the map of votes
-        self.votes[vote.sender].append(vote)
+        
+        if vote not in self.votes[vote.sender]:
+            self.votes[vote.sender].append(vote)
 
-        # Add to the vote count
-        if vote.source not in self.vote_count:
-            self.vote_count[vote.source] = {}
-        self.vote_count[vote.source][vote.target] = self.vote_count[
-            vote.source].get(vote.target, 0) + 1
+            # Add to the vote count
+            if vote.source not in self.vote_count:
+                self.vote_count[vote.source] = {}
+            self.vote_count[vote.source][vote.target] = self.vote_count[
+                vote.source].get(vote.target, 0) + 1
 
         # TODO: we do not deal with finalized dynasties (the pool of validator
         # is always the same right now)
         # If there are enough votes, process them
-        if (self.vote_count[vote.source][vote.target] > (NUM_VALIDATORS * SUPER_MAJORITY)):
+        
+        self.check_SM(vote,sml_stats)
 
-            # record the length of a link
-            sml_stats[(vote.source, vote.target)] = vote.epoch_target - vote.epoch_source
-
-            # Mark the target as justified
-            self.justified.add(vote.target)
-            self.network.report_justified(vote.target,self.id)
-
-
-            if vote.target in self.justification_dependencies:
-                for d in self.justification_dependencies[vote.target]:
-                    self.on_receive(d,sml_stats)
-                del self.justification_dependencies[vote.target]
-
-            if vote.epoch_target > self.highest_justified_checkpoint.epoch:
-                self.highest_justified_checkpoint = self.processed[vote.target]
-                #self.time_to_vote = self.network.time + np.random.uniform(0,VOTING_DELAY)
-    
-            # If the source was a direct parent of the target, the source
-            # is finalized
-            if vote.epoch_source == vote.epoch_target - 1:
-                if vote.epoch_source>self.highest_finalized_checkpoint_epoch:
-                    self.highest_finalized_checkpoint_epoch = vote.epoch_source
-                self.finalized.add(vote.source)
-                self.network.report_finalized(vote.source,self.id)
         return True
+
+
+    def check_SM(self,vote,sml_stats={}):
+        if vote.target in self.processed and vote.source in self.processed:
+
+            if (self.vote_count[vote.source][vote.target] > (NUM_VALIDATORS * SUPER_MAJORITY)):
+
+                # record the length of a link
+                sml_stats[(vote.source, vote.target)] = vote.epoch_target - vote.epoch_source
+
+                # Mark the target as justified
+                self.justified.add(vote.target)
+                self.network.report_justified(vote.target,self.id)
+
+
+                if vote.target in self.justification_dependencies:
+                    for d in self.justification_dependencies[vote.target]:
+                        self.on_receive(d,sml_stats)
+                    del self.justification_dependencies[vote.target]
+
+                if vote.epoch_target > self.highest_justified_checkpoint.epoch:
+                    self.highest_justified_checkpoint = self.processed[vote.target]
+                    #self.time_to_vote = self.network.time + np.random.uniform(0,VOTING_DELAY)
+        
+                # If the source was a direct parent of the target, the source
+                # is finalized
+                if vote.epoch_source == vote.epoch_target - 1:
+                    if vote.epoch_source>self.highest_finalized_checkpoint_epoch:
+                        self.highest_finalized_checkpoint_epoch = vote.epoch_source
+                    self.finalized.add(vote.source)
+                    self.network.report_finalized(vote.source,self.id)
+        
+        if vote.source not in self.processed:
+            self.add_dependency(vote.source, vote)
+
+        # Check that the source is processed and justified
+        # TODO: If the source is not justified, add to dependencies?
+        #******************************ADD DEPENDENCIES HERE************************************
+
+        if vote.source not in self.justified:
+            self.add_justification_dependency(vote.source,vote)  ##########
+            return False
+        # If the target has not yet been processed, wait
+        if vote.target not in self.processed:
+            self.add_dependency(vote.target, vote)
+            return False
+
+
+
     '''
     def vote_if_delayed(self):
         if self.network.time >= self.time_to_vote:

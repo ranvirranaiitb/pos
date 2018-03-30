@@ -11,6 +11,7 @@ from validator import VoteValidator
 from collections import Counter
 from tqdm import tqdm
 from pandas import DataFrame
+import random
 
 def fraction_justified_and_finalized(validator):
     """Compute the fraction of justified and finalized checkpoints in the main chain.
@@ -255,6 +256,7 @@ def print_metrics_latency(num_tries,latencies,wait_fractions, validator_set=VALI
             num_depth_finalized = 0
             sum_type_1_vote = 0
             sum_type_2_vote = 0
+            mining_ids = [i for i in range(NUM_VALIDATORS)]
 
             for i in range(num_tries):
                 network = Network(exponential_latency(latency))
@@ -262,6 +264,12 @@ def print_metrics_latency(num_tries,latencies,wait_fractions, validator_set=VALI
 
                 for t in tqdm(range(BLOCK_PROPOSAL_TIME * EPOCH_SIZE * NUM_EPOCH)):
                     network.tick(sml_stats)
+                    # The code below does random shuffling of mining order
+                    if t%BLOCK_PROPOSAL_TIME*NUM_VALIDATORS ==0:
+                        random.shuffle(mining_ids)
+                        for val in validators:
+                            val.mining_id = mining_ids[val.id]
+
                     # if t % (BLOCK_PROPOSAL_TIME * EPOCH_SIZE) == 0:
                     #     filename = os.path.join(LOG_DIR, 'plot_{:03d}.png'.format(t))
                     #     plot_node_blockchains(validators, filename)
