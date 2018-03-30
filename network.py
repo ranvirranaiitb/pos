@@ -65,7 +65,6 @@ class Network(object):
                 self.msg_arrivals[self.time + delay] = []
 
             self.msg_arrivals[self.time + delay].append((node.id, msg))
-
     
     def tick(self, sml_stats = {}):
         """Simulates a tick of time.
