@@ -439,8 +439,6 @@ if __name__ == '__main__':
     # fractions = np.arange(0.0, 0.4, 0.05)
     # fractions = [0.31, 0.32, 0.33]
     fractions = [0.0]
-    vote_as_block = False
-    immediate_vote = True
 
     print('``````````````````')
     print("""running test
@@ -455,8 +453,8 @@ if __name__ == '__main__':
                    SUPER_MAJORITY,
                    NUM_VALIDATORS,
                    D_REGULAR,
-                   vote_as_block,
-                   immediate_vote))
+                   VOTE_AS_BLOCK,
+                   IMMEDIATE_VOTE))
     print('``````````````````')
 
     for fraction_disconnected in fractions:
@@ -477,8 +475,8 @@ if __name__ == '__main__':
 
         tp, delay, depth, mcf = print_metrics_latency(G, num_tries,latencies, \
                                                       wait_fractions,
-                                                        vote_as_block,
-                                                        immediate_vote,
+                                                        VOTE_AS_BLOCK,
+                                                        IMMEDIATE_VOTE,
                                                         validator_set)
 
         # save data to test.xlsx

@@ -14,3 +14,7 @@ SUPER_MAJORITY = 0.8
 
 # graph properties
 D_REGULAR = 6
+
+# protocol properties
+VOTE_AS_BLOCK = False
+IMMEDIATE_VOTE = False

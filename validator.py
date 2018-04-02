@@ -118,13 +118,20 @@ class VoteValidator(Validator):
         # Set of finalized block hashes
         self.finalized = {ROOT.hash}
 
-        # Map {sender -> votes}
-        # Contains all the votes, and allow us to see who voted for whom
+        # Map {sender -> vote}
+        # Contains all the votes and received time
         # Used to check for the slashing conditions
         self.votes = {}
 
+        # Map {source_hash -> {target_hash -> [time_stamps]}}
+        # Used to weigh votes
+        # Eg, if a validator votes for blocks 0xdead to 0xbeef,
+        #     self.vote_timestamps[0xdead][0xbeef] will be [50, 102]
+        self.vote_timestamps = {}
+
         # Map {source_hash -> {target_hash -> count}} to count the votes
-        # ex: self.vote_count[source][target] will be between 0 and NUM_VALIDATORS
+        # Eg, if a validator votes for blocks 0xdead to 0xbeef,
+        #     self.vote_count[0xdead][0xbeef] will be 1
         self.vote_count = {}
 
         self.depth_finalized = 0
@@ -407,15 +414,22 @@ class VoteValidator(Validator):
                 return False
 
         # Add the vote to the map of votes
-        
         if vote not in self.votes[vote.sender]:
             self.votes[vote.sender].append(vote)
 
-            # Add to the vote count
+            # Add to the vote_count
             if vote.source not in self.vote_count:
                 self.vote_count[vote.source] = {}
             self.vote_count[vote.source][vote.target] = self.vote_count[
                 vote.source].get(vote.target, 0) + 1
+
+            # log timestamp to vote_timestamps
+            if vote.source not in self.vote_timestamps:
+                self.vote_timestamps[vote.source] = {}
+            if vote.target not in self.vote_timestamps[vote.source]:
+                self.vote_timestamps[vote.source][vote.target] = []
+            self.vote_timestamps[vote.source][vote.target] += [self.network.time]
+
 
         # TODO: we do not deal with finalized dynasties (the pool of validator
         # is always the same right now)
@@ -494,31 +508,47 @@ class VoteValidator(Validator):
             if blockheight in self.time_to_vote:
                 if self.network.time > self.time_to_vote[blockheight] :
                     self.vote_at_given_height(blockheight)
-                    '''
-                    print("I am here-2")
-                    print(self.current_epoch)
-                    input()
-                    '''
 
     def vote_at_given_height(self,blockheight):
-        temp = 0
-        temptarget = None
+        # find out most popular link to vote on 
+        max_weight = 0
+        popular_target = None
+
         if self.highest_justified_checkpoint.hash not in self.vote_count:
             self.vote_count[self.highest_justified_checkpoint.hash] = {}
+
+        # search for received checkpoint with max votes weight
         for targethash in self.vote_count[self.highest_justified_checkpoint.hash]:
-            if self.vote_count[self.highest_justified_checkpoint.hash][targethash]>temp and self.network.processed[targethash].height == blockheight :
-                temp = self.vote_count[self.highest_justified_checkpoint.hash][targethash]
-                temptarget = targethash
-        if temp>0:
+            
+            # each vote bears same weight
+            # case 1: equally-weighted votes
+            weight = self.vote_count[self.highest_justified_checkpoint.hash][targethash] 
+            # case 2: weighted votes by network time
+            #         the later the vote, the more time
+            #         trivally, we just sum the timestamps
+            timestamps = self.vote_timestamps[self.highest_justified_checkpoint.hash][targethash] 
+            try:
+                weight = sum(timestamps)
+            except OverflowError as err:
+                print("Overflowed after", weight, err)
+
+            if (weight > max_weight and self.network.processed[targethash].height == blockheight) :
+                max_weight = weight
+                popular_target = targethash
+
+        # there is a link to vote on
+        if max_weight > 0:
             #print("DEBUG3")
             #input()
-            if temptarget in self.processed:
+            if popular_target in self.processed:
                 #print("I am here")
                 #input()
-                #print(self.processed[temptarget].height)
+                #print(self.processed[popular_target].height)
                 #print(self.current_epoch)
                 #print('This is happening')
-                self.type_1_vote += self.maybe_vote_last_checkpoint(self.processed[temptarget]) #If the targetblock has not yet arrived, wait till the targetblock arrives and then do the maximization
+                # If the targetblock has not yet arrived, wait till the
+                # targetblock arrives and then do the maximization
+                self.type_1_vote += self.maybe_vote_last_checkpoint(self.processed[popular_target]) 
         else:
             self.vote_permission[blockheight] = True
             #print(blockheight)
