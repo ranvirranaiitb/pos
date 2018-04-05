@@ -11,10 +11,11 @@ class Vote():
         epoch_target: epoch of the target block
         sender: node sending the VOTE message
     """
-    def __init__(self, source, target, epoch_source, epoch_target, sender):
+    def __init__(self, source, target, epoch_source, epoch_target, sender, confidence):
         self.hash = random.randint(1, 10**30)
         self.source = source
         self.target = target
         self.epoch_source = epoch_source
         self.epoch_target = epoch_target
         self.sender = sender
+        self.confidence = confidence

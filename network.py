@@ -2,6 +2,9 @@ from parameters import *
 from multiprocessing import Process
 from utils import *
 
+from block import Block, Dynasty
+from message import Vote
+
 class Network(object):
     """Networking layer controlling the delivery of messages between nodes.
 
@@ -76,6 +79,10 @@ class Network(object):
         if self.time in self.msg_arrivals:
             for node_index, msg in self.msg_arrivals[self.time]:
                 self.nodes[node_index].on_receive(msg, sml_stats)
+                if(isinstance(msg, Block)):
+                    #print('Block through network')
+                    #print(self.time)
+                    pass
             del self.msg_arrivals[self.time]
         for n in self.nodes:
             n.tick(self.time)

@@ -44,9 +44,11 @@ def delay_throughput(network):
     delay = {}
     Edelay = 0.0
     E2delay = 0.0
+    delay_array = np.array([])
     for block_hash in network.global_finalized_time_absolute :
         delay[block_hash] = network.global_finalized_time_absolute[block_hash]  - network.first_proposal_time[block_hash]
     for block_hash in delay :
+        delay_array = np.append(delay_array,delay[block_hash])
         Edelay += delay[block_hash]
         E2delay += delay[block_hash]**2
     if len(delay)>0:
@@ -73,7 +75,7 @@ def delay_throughput(network):
     else:
         throughput = 0  #max_time - min_time
 
-    return Edelay, E2delay, throughput, len(network.global_finalized_time)
+    return Edelay, E2delay, throughput, len(network.global_finalized_time), delay_array
 
 def timing_chain(network):
     timing = {}
@@ -209,7 +211,8 @@ def count_forks(validator):
 
 
 def print_metrics_latency (G, num_tries, latencies,
-                          wait_fractions, vote_as_block, validator_set=VALIDATOR_IDS):
+                          wait_fractions, vote_as_block, immediate_vote, 
+                          wait_for_majority, vote_confidence, validator_set=VALIDATOR_IDS):
     # metrics for analysis
     tp      = []
     delay   = []
@@ -259,10 +262,11 @@ def print_metrics_latency (G, num_tries, latencies,
             sml_stats               = {}
             depth_finalized         = 0
             num_depth_finalized     = 0
+            delay_array = np.array([])
 
             for i in range(num_tries):
                 network = Network(G.adj, latency)
-                validators = [VoteValidator(network,latency,wf, i,vote_as_block) for i in validator_set]
+                validators = [VoteValidator(network,latency,wf, i,vote_as_block, immediate_vote, wait_for_majority, vote_confidence) for i in validator_set]
 
                 for t in tqdm(range(BLOCK_PROPOSAL_TIME * EPOCH_SIZE * NUM_EPOCH)):
                     network.tick(sml_stats)
@@ -299,7 +303,8 @@ def print_metrics_latency (G, num_tries, latencies,
                     #for l in fc.keys():
                         #fcsum[l] = fcsum.get(l, 0) + fc[l]
 
-                Edelay,E2delay,throughput,num_finalized = delay_throughput(network)
+                Edelay,E2delay,throughput,num_finalized, temp_delay_array = delay_throughput(network)
+                delay_array = np.append(delay_array,temp_delay_array)
                 delaysum += Edelay*num_finalized
                 squaredelaysum += E2delay*num_finalized
                 if num_finalized>0:
@@ -368,6 +373,10 @@ def print_metrics_latency (G, num_tries, latencies,
             depth += [depth_finalized]
             mcf += [Emc/(EPOCH_SIZE*NUM_EPOCH + 1)]
 
+            delay_array = delay_array/(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))
+
+            delay_quartiles = [np.percentile(delay_array,25),np.percentile(delay_array,50),np.percentile(delay_array,75),np.percentile(delay_array,100)]
+
             print('=== Statistics ===')
             print('Latency: {}'
                     .format(latency))
@@ -397,6 +406,8 @@ def print_metrics_latency (G, num_tries, latencies,
                 print('---new, incld. dead blocks---')
                 print('Delay:{}'
                         .format(Edelay/(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))))
+                print('Delay:{}'.format(np.mean(delay_array)))
+                print('delay_quartiles: {}'.format(delay_quartiles))
                 print('sd_delay:{}'.format(sd_delay/(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))))
                 print('Throughput:{}'
                         .format(Ethroughput))
@@ -420,6 +431,8 @@ def print_metrics_latency (G, num_tries, latencies,
             depth_list.append(depth_finalized)
             MCF_list.append(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))
 
+
+
         print('wait_fraction_list: {}'.format(wait_fraction_list))
         print('new_delay_list: {}'.format(new_delay_list))
         print('tp_list: {}'.format(tp_list))
@@ -439,7 +452,10 @@ if __name__ == '__main__':
     # fractions = np.arange(0.0, 0.4, 0.05)
     # fractions = [0.31, 0.32, 0.33]
     fractions = [0.0]
-    vote_as_block = True
+    vote_as_block = False
+    immediate_vote = True
+    wait_for_majority = False
+    vote_confidence = False
 
     print('``````````````````')
     print("""running test
@@ -448,12 +464,18 @@ if __name__ == '__main__':
             SUPER_MAJORITY: {}
             NUM_VALIDATORS: {}
             D_REGULAR: {}
-            Vote_as_block: {}""".
+            Vote_as_block: {}
+            Immediate_vote: {}
+            Wait_for_majority: {}
+            Vote_confidence: {}""".
             format(NUM_EPOCH,
                    SUPER_MAJORITY,
                    NUM_VALIDATORS,
                    D_REGULAR,
-                   vote_as_block))
+                   vote_as_block,
+                   immediate_vote,
+                   wait_for_majority,
+                   vote_confidence))
     print('``````````````````')
 
     for fraction_disconnected in fractions:
@@ -464,8 +486,8 @@ if __name__ == '__main__':
 
         num_tries = 1
         #latencies = [i for i in range(10, 300, 20)] + [500, 750, 1000]
-        latencies = [100]
-        wait_fractions =  [0.0,0.1,0.2,0.5,1.0,1.5,2.0,3.0,5.0,10.0]
+        latencies = [250]
+        wait_fractions =  [0.0]
         
 
         # Graph
@@ -475,6 +497,9 @@ if __name__ == '__main__':
         tp, delay, depth, mcf = print_metrics_latency(G, num_tries,latencies, \
                                                       wait_fractions,
                                                         vote_as_block,
+                                                        immediate_vote,
+                                                        wait_for_majority,
+                                                        vote_confidence,
                                                         validator_set)
 
         # save data to test.xlsx
