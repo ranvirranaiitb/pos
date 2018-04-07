@@ -1,0 +1,46 @@
+``````````````````
+running test
+            PROTOCOL: vote-on-majority-after-delay
+            NUM_EPOCH: 2500
+            SUPER_MAJORITY: 0.67
+            NUM_VALIDATORS: 50
+            D_REGULAR: 6
+            Vote_as_block: False
+            Immediate_vote: True
+            Wait_for_majority: False
+            Vote_confidence: False
+``````````````````
+height of connected of nodes: 50
+wait_fraction: 0.0
+[541.0, 541.0, 541.0, 541.0]
+=== Statistics ===
+Latency: 250
+Timing: [   0.          208.5247093   470.13226744  530.39244186 1284.47024673
+ 1505.53120464 1752.09796673 1813.42698706]
+Bar_graph: [208.5247093023256, 261.60755813953483, 814.3379792925373, 221.0609579100144, 246.56676208386875, 61.329020332717164]
+Justified in forks: [0.0, 0.0]
+Main chain size (root included): [4901.0, 0.0]
+Probability of death: 0.6079513638908887
+Blocks under main justified: [12477.0, 0.0]
+finalization_quartiles:[[28.12384473197782, 39.632162661737524, 48.61182994454713, 58.07024029574861], [13.762489028400823, 19.630307792988834, 26.416278109277282, 41.22261216755168]]
+Main chain fraction:[0.3920486361091113, 0.0]
+type_1_vote: 0
+type_2_vote: 0
+---new, incld. dead blocks---
+Delay:6578.451255112396
+Delay:6578.451255112396
+delay_quartiles: [4547.905121403795, 5695.721893491124, 7562.837176086513, 25519.792899408283]
+sd_delay:3114.4856479706305
+Throughput:0.0007847998680254916
+depth:13.689910150655669
+---old, ignoring dead blocks---
+Delay:[2579.0728422770862, 1490913.8957346082]
+Throughput:[0.0007847998680254916, 0.0]
+supermajority link stats: {1: 541, 2: 143, 4: 10, 3: 36, 5: 1}
+=== END === 
+wait_fraction_list: [0.0]
+new_delay_list: [6578.451255112396]
+tp_list: [0.0007847998680254916]
+depth_list: [13.689910150655669]
+MCF_list: [0.3920486361091113]
+old_delay_list: [2579.0728422770862]

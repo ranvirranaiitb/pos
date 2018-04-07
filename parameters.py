@@ -1,7 +1,7 @@
 """List of parameters for the simulation.
 """
 
-NUM_VALIDATORS = 50  # number of validators at each checkpoint
+NUM_VALIDATORS = 500  # number of validators at each checkpoint
 VALIDATOR_IDS = list(range(0, NUM_VALIDATORS * 2))  # set of validators
 INITIAL_VALIDATORS = list(range(0, NUM_VALIDATORS))  # set of validators for root
 BLOCK_PROPOSAL_TIME = 100  # adds a block every 100 ticks
@@ -13,4 +13,4 @@ NUM_EPOCH = 2500
 SUPER_MAJORITY = 0.67
 
 # graph properties
-D_REGULAR = 6
+D_REGULAR = 4

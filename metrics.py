@@ -212,7 +212,8 @@ def count_forks(validator):
 
 def print_metrics_latency (G, num_tries, latencies,
                           wait_fractions, vote_as_block, immediate_vote, 
-                          wait_for_majority, vote_confidence, validator_set=VALIDATOR_IDS):
+                          wait_for_majority, vote_confidence, 
+                          lottery_fraction, validator_set=VALIDATOR_IDS):
     # metrics for analysis
     tp      = []
     delay   = []
@@ -266,7 +267,7 @@ def print_metrics_latency (G, num_tries, latencies,
 
             for i in range(num_tries):
                 network = Network(G.adj, latency)
-                validators = [VoteValidator(network,latency,wf, i,vote_as_block, immediate_vote, wait_for_majority, vote_confidence) for i in validator_set]
+                validators = [VoteValidator(network,latency,wf, i,vote_as_block, immediate_vote, wait_for_majority, vote_confidence, lottery_fraction) for i in validator_set]
 
                 for t in tqdm(range(BLOCK_PROPOSAL_TIME * EPOCH_SIZE * NUM_EPOCH)):
                     network.tick(sml_stats)
@@ -452,14 +453,15 @@ if __name__ == '__main__':
     # fractions = np.arange(0.0, 0.4, 0.05)
     # fractions = [0.31, 0.32, 0.33]
     fractions = [0.0]
-    vote_as_block = False
-    immediate_vote = True
+    vote_as_block = True
+    immediate_vote = False
     wait_for_majority = False
-    vote_confidence = False
+    vote_confidence = True
+    lottery_fraction = 0.5
 
     print('``````````````````')
     print("""running test
-            PROTOCOL: vote-on-majority-after-delay
+            PROTOCOL: confidance updated
             NUM_EPOCH: {}
             SUPER_MAJORITY: {}
             NUM_VALIDATORS: {}
@@ -467,7 +469,9 @@ if __name__ == '__main__':
             Vote_as_block: {}
             Immediate_vote: {}
             Wait_for_majority: {}
-            Vote_confidence: {}""".
+            Vote_confidence: {}
+            lottery fraction; {}
+            EPOCH_SIZE: {}""".
             format(NUM_EPOCH,
                    SUPER_MAJORITY,
                    NUM_VALIDATORS,
@@ -475,7 +479,9 @@ if __name__ == '__main__':
                    vote_as_block,
                    immediate_vote,
                    wait_for_majority,
-                   vote_confidence))
+                   vote_confidence,
+                   lottery_fraction,
+                   EPOCH_SIZE))
     print('``````````````````')
 
     for fraction_disconnected in fractions:
@@ -487,7 +493,7 @@ if __name__ == '__main__':
         num_tries = 1
         #latencies = [i for i in range(10, 300, 20)] + [500, 750, 1000]
         latencies = [250]
-        wait_fractions =  [0.0]
+        wait_fractions =  [0.1]
         
 
         # Graph
@@ -500,6 +506,7 @@ if __name__ == '__main__':
                                                         immediate_vote,
                                                         wait_for_majority,
                                                         vote_confidence,
+                                                        lottery_fraction,
                                                         validator_set)
 
         # save data to test.xlsx

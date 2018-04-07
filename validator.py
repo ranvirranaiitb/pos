@@ -3,9 +3,13 @@ from message import Vote
 from parameters import *
 import numpy as np
 import random
+import math
 
 # Root of the blockchain
 ROOT = Block()
+
+def sigmoid(x):
+  return 1 / (1 + math.exp(-x))
 
 class Validator(object):
     """Abstract class for validators."""
@@ -104,7 +108,7 @@ class Validator(object):
 class VoteValidator(Validator):
     """Add the vote messages + slashing conditions capability"""
 
-    def __init__(self, network, latency, wait_fraction, id, vote_as_block, immediate_vote, wait_for_majority, vote_confidence):
+    def __init__(self, network, latency, wait_fraction, id, vote_as_block, immediate_vote, wait_for_majority, vote_confidence, lottery_fraction):
         super(VoteValidator, self).__init__(network, latency,wait_fraction, id,immediate_vote)
         # the head is the latest block processed descendant of the highest
         # justified checkpoint
@@ -139,6 +143,7 @@ class VoteValidator(Validator):
         self.vote_as_block = vote_as_block
         self.wait_for_majority = wait_for_majority
         self.vote_confidence = vote_confidence
+        self.lottery_fraction = lottery_fraction
         self.vote_score = {}
         
 
@@ -209,8 +214,14 @@ class VoteValidator(Validator):
             self.tails[block.hash] = block
             # Maybe vote
             if block.height not in self.time_to_vote:
-                self.time_to_vote[block.height] = self.network.time + 1 + int(random.expovariate(1) * self.voting_delay_average)
-                self.vote_permission[block.height] = False
+                toss = np.random.binomial(1,self.lottery_fraction)
+                if toss:
+                    self.time_to_vote[block.height] = self.network.time + 1
+                    self.vote_permission[block.height] = False 
+                else:
+                    self.time_to_vote[block.height] = self.network.time + 1 + int(random.expovariate(1) * self.voting_delay_average)        
+                    self.vote_permission[block.height] = False
+                
 
             if self.immediate_vote:
                 self.maybe_vote_last_checkpoint(block,0.5)
@@ -540,7 +551,10 @@ class VoteValidator(Validator):
         for blockheight in range((self.current_epoch+1)*EPOCH_SIZE,self.head.height,EPOCH_SIZE):
             if blockheight in self.time_to_vote:
                 if self.network.time > self.time_to_vote[blockheight] :
-                    self.vote_at_given_height(blockheight)
+                    if self.highest_justified_checkpoint.hash not in self.vote_score:
+                        self.vote_score[self.highest_justified_checkpoint.hash] = {}
+                    temp_vote_score = self.vote_score[self.highest_justified_checkpoint.hash]
+                    self.vote_at_given_height(blockheight,temp_vote_score )
                     '''
                     print("I am here-2")
                     print(self.current_epoch)
@@ -548,13 +562,11 @@ class VoteValidator(Validator):
                     '''
 
 
-    def vote_at_given_height(self,blockheight):
+    def vote_at_given_height(self,blockheight, temp_vote_score):
         temp = 0
         temptarget = None
 
-        if self.highest_justified_checkpoint.hash not in self.vote_score:
-            self.vote_score[self.highest_justified_checkpoint.hash] = {}
-        for targethash in self.vote_score[self.highest_justified_checkpoint.hash]:
+        for targethash in temp_vote_score:
             if self.vote_score[self.highest_justified_checkpoint.hash][targethash]>temp and self.network.processed[targethash].height == blockheight :
                 temp = self.vote_score[self.highest_justified_checkpoint.hash][targethash]
                 temptarget = targethash
@@ -572,7 +584,7 @@ class VoteValidator(Validator):
                 for targethash in self.vote_count[self.highest_justified_checkpoint.hash]:
                     sum_v_count += self.vote_count[self.highest_justified_checkpoint.hash][targethash]
 
-                num_confidence = sigmoid(sum_v_count/NUM_VALIDATORS)
+                num_confidence = 4.5*sum_v_count/NUM_VALIDATORS + 0.5
 
                 confidence = p_confidence*num_confidence
             else:
@@ -588,7 +600,8 @@ class VoteValidator(Validator):
                 self.type_1_vote += self.maybe_vote_last_checkpoint(self.processed[temptarget], confidence) #If the targetblock has not yet arrived, wait till the targetblock arrives and then do the maximization
             else:
                 if not self.wait_for_majority:
-                    self.type_2_vote += self.maybe_vote_last_checkpoint(self.first_block_height[blockheight], 0.5 ) #To be updated, not completely correct, we need to vote for next
+                    del temp_vote_score[temptarget]
+                    self.vote_at_given_height(blockheight,temp_vote_score)
         else:
             self.vote_permission[blockheight] = True
             #print(blockheight)
