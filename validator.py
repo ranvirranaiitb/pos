@@ -3,6 +3,7 @@ from message import Vote
 from parameters import *
 import numpy as np
 import random
+import math as m
 
 # Root of the blockchain
 ROOT = Block()
@@ -133,6 +134,11 @@ class VoteValidator(Validator):
         # Eg, if a validator votes for blocks 0xdead to 0xbeef,
         #     self.vote_count[0xdead][0xbeef] will be 1
         self.vote_count = {}
+
+        # track the first vote from a src block
+        # self.first_vote_timestamp[src] -> time
+        self.first_vote_timestamp = {}
+        self.last_vote_timestamp = {}
 
         self.depth_finalized = 0
         self.num_depth_finalized = 0
@@ -420,15 +426,23 @@ class VoteValidator(Validator):
             # Add to the vote_count
             if vote.source not in self.vote_count:
                 self.vote_count[vote.source] = {}
+
             self.vote_count[vote.source][vote.target] = self.vote_count[
                 vote.source].get(vote.target, 0) + 1
 
             # log timestamp to vote_timestamps
             if vote.source not in self.vote_timestamps:
+                # first vote received
                 self.vote_timestamps[vote.source] = {}
+                self.first_vote_timestamp[vote.source] = self.network.time
+                self.last_vote_timestamp[vote.source] = self.network.time
+
             if vote.target not in self.vote_timestamps[vote.source]:
                 self.vote_timestamps[vote.source][vote.target] = []
             self.vote_timestamps[vote.source][vote.target] += [self.network.time]
+            # set last vote received
+            if self.last_vote_timestamp[vote.source] < self.network.time:
+                self.last_vote_timestamp[vote.source] = self.network.time
 
 
         # TODO: we do not deal with finalized dynasties (the pool of validator
@@ -513,22 +527,30 @@ class VoteValidator(Validator):
         # find out most popular link to vote on 
         max_weight = 0
         popular_target = None
+        first_vote_timestamp = 0
 
-        if self.highest_justified_checkpoint.hash not in self.vote_count:
-            self.vote_count[self.highest_justified_checkpoint.hash] = {}
+        src = self.highest_justified_checkpoint 
+
+        if src.hash not in self.vote_count:
+            self.vote_count[src.hash] = {}
 
         # search for received checkpoint with max votes weight
-        for targethash in self.vote_count[self.highest_justified_checkpoint.hash]:
+        for targethash in self.vote_count[src.hash]:
             
             # each vote bears same weight
             # case 1: equally-weighted votes
-            weight = self.vote_count[self.highest_justified_checkpoint.hash][targethash] 
-            # case 2: weighted votes by network time
+            # weight = self.vote_count[src.hash][targethash] 
+            # case 2: weighted votes by log(network time)
             #         the later the vote, the more time
-            #         trivally, we just sum the timestamps
-            timestamps = self.vote_timestamps[self.highest_justified_checkpoint.hash][targethash] 
+            #         we normalize based on first vote @ t=1
+            timestamps = self.vote_timestamps[src.hash][targethash] 
+            #weighted_timestamps = list(map(lambda x : m.log(x-self.first_vote_timestamp[src.hash]+1), timestamps))
+            # case 3: weigh based on bounded exponential between 1 to e
+            norm_timestamps = list(map(lambda x: x-self.first_vote_timestamp[src.hash]+1, timestamps))
+            k = self.last_vote_timestamp[src.hash]
+            weighted_timestamps = [m.exp(x/k) for x in norm_timestamps]
             try:
-                weight = sum(timestamps)
+                weight = sum(weighted_timestamps)
             except OverflowError as err:
                 print("Overflowed after", weight, err)
 

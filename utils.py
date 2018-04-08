@@ -71,8 +71,9 @@ def generate_latencies (avg_latency, adj_list, src):
     
     #print('generating_regular_graph')
 
+    # to ensure no relaying (infection only from source)
     delay_fully_connected = [exponential_latency(avg_latency) for i in range(NUM_VALIDATORS)]
 
-    #TODO NOT IMPELMENTED
-
-    return delay_fully_connected
+    
+    return (delay_fully_connected if (D_REGULAR == NUM_VALIDATORS-1) 
+           else delay_regular)

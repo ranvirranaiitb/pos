@@ -13,6 +13,7 @@ from tqdm import tqdm
 from pandas import DataFrame
 import random
 import networkx as nx
+import numpy as np
 
 def fraction_justified_and_finalized(validator):
     """Compute the fraction of justified and finalized checkpoints in the main chain.
@@ -44,8 +45,10 @@ def delay_throughput(network):
     delay = {}
     Edelay = 0.0
     E2delay = 0.0
+    delay_array = np.array([])
     for block_hash in network.global_finalized_time_absolute :
         delay[block_hash] = network.global_finalized_time_absolute[block_hash]  - network.first_proposal_time[block_hash]
+        delay_array = np.append(delay_array,delay[block_hash])
     for block_hash in delay :
         Edelay += delay[block_hash]
         E2delay += delay[block_hash]**2
@@ -73,7 +76,7 @@ def delay_throughput(network):
     else:
         throughput = 0  #max_time - min_time
 
-    return Edelay, E2delay, throughput, len(network.global_finalized_time)
+    return Edelay, E2delay, throughput, len(network.global_finalized_time), delay_array
 
 def timing_chain(network):
     timing = {}
@@ -259,6 +262,7 @@ def print_metrics_latency (G, num_tries, latencies,
             sml_stats               = {}
             depth_finalized         = 0
             num_depth_finalized     = 0
+            delay_array             = np.array([])   
 
             for i in range(num_tries):
                 network = Network(G.adj, latency)
@@ -299,7 +303,8 @@ def print_metrics_latency (G, num_tries, latencies,
                     #for l in fc.keys():
                         #fcsum[l] = fcsum.get(l, 0) + fc[l]
 
-                Edelay,E2delay,throughput,num_finalized = delay_throughput(network)
+                Edelay,E2delay,throughput,num_finalized, temp_delay_array = delay_throughput(network)
+                delay_array = np.append(delay_array, temp_delay_array)
                 delaysum += Edelay*num_finalized
                 squaredelaysum += E2delay*num_finalized
                 if num_finalized>0:
@@ -368,25 +373,22 @@ def print_metrics_latency (G, num_tries, latencies,
             depth += [depth_finalized]
             mcf += [Emc/(EPOCH_SIZE*NUM_EPOCH + 1)]
 
+            delay_array = delay_array/(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))
+
+            delay_quartiles = [np.percentile(delay_array,25),
+                              np.percentile(delay_array,50),
+                              np.percentile(delay_array,75),
+                              np.percentile(delay_array,100)]
+
             print('=== Statistics ===')
             print('Latency: {}'
                     .format(latency))
-            print('Timing: {}'
-                    .format(Etiming))
-            print('Bar_graph: {}'
-                    .format([Etiming[1], (Etiming[2]-Etiming[1]),
-                            (Etiming[4]-Etiming[2]),(Etiming[5]-Etiming[4]),
-                            (Etiming[6]-Etiming[5]),(Etiming[7]-Etiming[6])]))
+            print('wait fraction: {}'
+                    .format(wf))
             print('Justified in forks: {}'
                     .format([Ejff,np.sqrt(varjff)]))
             print('Main chain size (root included): {}'
                     .format([Emc,np.sqrt(varmc)]))
-            print('Probability of death: {}'
-                    .format(1.0 - Emc/(EPOCH_SIZE*NUM_EPOCH + 1)))  # include ROOT
-            print('Blocks under main justified: {}'
-                    .format([Ebu,varbu]))
-            print('finalization_quartiles:{}'
-                    .format([Equartiles,stdquartiles]))
             print('Main chain fraction:{}'
                     .format([Emc/(EPOCH_SIZE*NUM_EPOCH + 1),        # include ROOT
                             np.sqrt(varmc)/EPOCH_SIZE/NUM_EPOCH ]))
@@ -396,17 +398,14 @@ def print_metrics_latency (G, num_tries, latencies,
             if finalization_achieved :
                 print('---new, incld. dead blocks---')
                 print('Delay:{}'
-                        .format(Edelay/(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))))
+                        .format(np.mean(delay_array)))
+                print('Delay_quartiles:{}'
+                        .format(delay_quartiles))
                 print('sd_delay:{}'.format(sd_delay/(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))))
                 print('Throughput:{}'
                         .format(Ethroughput))
                 print('depth:{}'
                         .format(depth_finalized))
-                print('---old, ignoring dead blocks---')
-                print('Delay:{}'
-                        .format([Edelay,vardelay]))
-                print('Throughput:{}'
-                        .format([Ethroughput,varthroughput]))
             else:
                 print('No finalization achieved')
             print('supermajority link stats: {}'
@@ -421,11 +420,8 @@ def print_metrics_latency (G, num_tries, latencies,
             MCF_list.append(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))
 
         print('wait_fraction_list: {}'.format(wait_fraction_list))
-        print('new_delay_list: {}'.format(new_delay_list))
-        print('tp_list: {}'.format(tp_list))
+        print('delay_list: {}'.format(new_delay_list))
         print('depth_list: {}'.format(depth_list))
-        print('MCF_list: {}'.format(MCF_list))
-        print('old_delay_list: {}'.format(old_delay_list))
 
         return (tp, delay, depth, mcf)
 
@@ -465,8 +461,8 @@ if __name__ == '__main__':
 
         num_tries = 1
         #latencies = [i for i in range(10, 300, 20)] + [500, 750, 1000]
-        latencies = [100]
-        wait_fractions =  [0.0]
+        latencies = [250]
+        wait_fractions =  [0.0, 0.1, 0.2, 0.5, 1.0]
         
 
         # Graph
