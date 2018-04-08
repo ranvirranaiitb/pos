@@ -453,11 +453,11 @@ if __name__ == '__main__':
     # fractions = np.arange(0.0, 0.4, 0.05)
     # fractions = [0.31, 0.32, 0.33]
     fractions = [0.0]
-    vote_as_block = True
-    immediate_vote = False
+    vote_as_block = False
+    immediate_vote = True
     wait_for_majority = False
-    vote_confidence = True
-    lottery_fraction = 0.5
+    vote_confidence = False
+    lottery_fraction = 0.0
 
     print('``````````````````')
     print("""running test

@@ -1,0 +1,97 @@
+``````````````````
+running test
+            PROTOCOL: confidance updated
+            NUM_EPOCH: 2500
+            SUPER_MAJORITY: 0.67
+            NUM_VALIDATORS: 500
+            D_REGULAR: 4
+            Vote_as_block: False
+            Immediate_vote: True
+            Wait_for_majority: False
+            Vote_confidence: False
+            lottery fraction; 0
+            EPOCH_SIZE: 5
+``````````````````
+height of connected of nodes: 500
+wait_fraction: 0.0
+[41.0, 41.0, 41.0, 41.0]
+=== Statistics ===
+Latency: 250
+Timing: [   0.          642.07058824 1500.37647059 1550.10588235 3044.70588235
+ 3731.48235294 4558.53658537 4627.6097561 ]
+Bar_graph: [642.0705882352942, 858.3058823529412, 1544.3294117647056, 686.7764705882355, 827.0542324246776, 69.07317073170725]
+Justified in forks: [0.0, 0.0]
+Main chain size (root included): [2091.0, 0.0]
+Probability of death: 0.8327333813294937
+Blocks under main justified: [12480.0, 0.0]
+finalization_quartiles:[[37.390243902439025, 46.829268292682926, 53.951219512195124, 69.07317073170732], [27.552945085187183, 37.20011961626743, 46.995044481624475, 102.54336149896508]]
+Main chain fraction:[0.16726661867050635, 0.0]
+type_1_vote: 0
+type_2_vote: 0
+---new, incld. dead blocks---
+Delay:105754.11717065725
+Delay:105754.11717065725
+delay_quartiles: [43929.865136298424, 83011.18364418938, 145306.93687230992, 454382.35437589674]
+sd_delay:79649.4101139704
+Throughput:0.0003341451346540634
+depth:65.53416704872308
+---old, ignoring dead blocks---
+Delay:[17689.133589620375, 177494002.45884776]
+Throughput:[0.0003341451346540634, 0.0]
+supermajority link stats: {2: 27, 1: 41, 3: 13, 4: 15, 6: 12, 10: 3, 14: 1, 5: 6, 8: 3, 7: 1, 9: 2, 11: 1, 18: 1}
+=== END === 
+wait_fraction: 0.1
+[45.0, 45.0, 45.0, 45.0]
+=== Statistics ===
+Latency: 250
+Timing: [   0.          633.79569892 1490.40860215 1543.90322581 3047.87234043
+ 3727.94680851 4508.33333333 4568.91111111]
+Bar_graph: [633.7956989247311, 856.6129032258066, 1557.4637382749943, 680.0744680851062, 780.3865248226948, 60.577777777778465]
+Justified in forks: [0.0, 0.0]
+Main chain size (root included): [2091.0, 0.0]
+Probability of death: 0.8327333813294937
+Blocks under main justified: [12416.0, 0.0]
+finalization_quartiles:[[35.71111111111111, 44.22222222222222, 50.4, 60.577777777777776], [23.92453154978261, 31.654305579626843, 41.163846057216546, 80.79287341753434]]
+Main chain fraction:[0.16726661867050635, 0.0]
+type_1_vote: 0
+type_2_vote: 0
+---new, incld. dead blocks---
+Delay:91157.1803445387
+Delay:91157.1803445387
+delay_quartiles: [40303.9175035868, 71514.56814921091, 126510.59827833573, 362224.09756097564]
+sd_delay:64085.4585506722
+Throughput:0.0003359107923798074
+depth:54.477218216974286
+---old, ignoring dead blocks---
+Delay:[15247.553323768532, 114904635.02573138]
+Throughput:[0.0003359107923798074, 0.0]
+supermajority link stats: {4: 11, 9: 5, 3: 23, 2: 29, 7: 5, 1: 45, 8: 1, 6: 4, 10: 2, 5: 9, 12: 1, 13: 1}
+=== END === 
+wait_fraction: 0.5
+[47.0, 47.0, 47.0, 47.0]
+=== Statistics ===
+Latency: 250
+Timing: [   0.          653.51456311 1498.66019417 1543.90291262 3022.33009709
+ 3712.85436893 4489.42553191 4533.93617021]
+Bar_graph: [653.5145631067961, 845.1456310679611, 1523.6699029126216, 690.5242718446602, 776.5711629828543, 44.5106382978729]
+Justified in forks: [0.0, 0.0]
+Main chain size (root included): [2066.0, 0.0]
+Probability of death: 0.8347332213422927
+Blocks under main justified: [12256.0, 0.0]
+finalization_quartiles:[[30.0, 36.53191489361702, 41.04255319148936, 44.51063829787234], [14.386755138121151, 18.158698828431874, 20.833644482360338, 22.999419364017378]]
+Main chain fraction:[0.1652667786577074, 0.0]
+type_1_vote: 0
+type_2_vote: 0
+---new, incld. dead blocks---
+Delay:90006.30907051801
+Delay:90006.30907051802
+delay_quartiles: [37981.01500484027, 65899.51161665053, 113230.56062439496, 497486.55275895447]
+sd_delay:76935.06748941574
+Throughput:0.00033622776866878225
+depth:54.368759708436365
+---old, ignoring dead blocks---
+Delay:[14875.052758954502, 161666412.91154367]
+Throughput:[0.00033622776866878225, 0.0]
+supermajority link stats: {4: 20, 2: 29, 8: 3, 3: 22, 6: 4, 1: 47, 5: 11, 7: 4, 11: 2, 9: 1}
+=== END === 
+wait_fraction: 1.0

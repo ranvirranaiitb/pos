@@ -13,4 +13,4 @@ NUM_EPOCH = 2500
 SUPER_MAJORITY = 0.67
 
 # graph properties
-D_REGULAR = 4
+D_REGULAR = 6
