@@ -1,6 +1,8 @@
 from parameters import *
 from multiprocessing import Process
 from utils import *
+import random
+import numpy as np
 
 class Network(object):
     """Networking layer controlling the delivery of messages between nodes.
@@ -39,7 +41,42 @@ class Network(object):
         self.final_quartiles={}
         self.final_validator ={}
         self.justify_validator={}
-        self.final_time={}
+        self.final_time     =   {}
+
+
+        ######################
+        ### lottery system ###
+        ######################
+        # randomly seeded
+        first_proposer = random.choice(INITIAL_VALIDATORS)
+        self.candidate = [first_proposer]
+        self.current_proposer = first_proposer
+
+        # mining_id => no. of times won
+        self.proposer_history = dict(zip(INITIAL_VALIDATORS,
+                                         [0]*len(INITIAL_VALIDATORS)))
+
+
+
+    def join_lottery(self, mining_id):
+        if (mining_id not in self.candidate):
+            self.candidate.append(mining_id)
+
+        return 0
+    def get_proposer(self, prob_dist):
+        """
+        generate 1 winner for each block,
+        probabilities based on winning history
+        clear out previous candidates
+        """
+        self.current_proposer = np.random.choice(self.candidate,
+                                1, p = prob_dist)
+        self.candidate = []
+        return 0
+
+    def reset_proposer(self):
+        self.current_proposer = None
+        return 0 
 
     def broadcast(self, msg, src):
         """

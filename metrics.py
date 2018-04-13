@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import os
+from termcolor import colored
 import numpy as np
 
 from parameters import *
@@ -228,6 +229,7 @@ def print_metrics_latency (G, num_tries, latencies,
         depth_list          = []
         wait_fraction_list  = []
         MCF_list            = []
+        mcf_list_percent    = []
 
         for wf in wait_fractions:
 
@@ -389,16 +391,20 @@ def print_metrics_latency (G, num_tries, latencies,
                     .format([Ejff,np.sqrt(varjff)]))
             print('Main chain size (root included): {}'
                     .format([Emc,np.sqrt(varmc)]))
+            # include ROOT
             print('Main chain fraction:{}'
-                    .format([Emc/(EPOCH_SIZE*NUM_EPOCH + 1),        # include ROOT
+                    .format([Emc/(EPOCH_SIZE*NUM_EPOCH + 1),
                             np.sqrt(varmc)/EPOCH_SIZE/NUM_EPOCH ]))
+            # include ROOT
+            print(colored('Main chain fraction (%):{}'
+                    .format(100*Emc/(EPOCH_SIZE*NUM_EPOCH + 1)), "green"))
             print('type_1_vote: {}'.format(sum_type_1_vote))
             print('type_2_vote: {}'.format(sum_type_2_vote))
             
             if finalization_achieved :
                 print('---new, incld. dead blocks---')
-                print('Delay:{}'
-                        .format(np.mean(delay_array)))
+                print(colored('Delay:{}'
+                        .format(np.mean(delay_array)), "green"))
                 print('Delay_quartiles:{}'
                         .format(delay_quartiles))
                 print('sd_delay:{}'.format(sd_delay/(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))))
@@ -410,6 +416,8 @@ def print_metrics_latency (G, num_tries, latencies,
                 print('No finalization achieved')
             print('supermajority link stats: {}'
                     .format(dict(Counter(sml_stats.values()))))
+            print('proposer history {}'
+                    .format(network.proposer_history))
             print('=== END === ')
 
             wait_fraction_list.append(wf)
@@ -418,9 +426,11 @@ def print_metrics_latency (G, num_tries, latencies,
             tp_list.append(Ethroughput)
             depth_list.append(depth_finalized)
             MCF_list.append(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))
+            mcf_list_percent.append(100*Emc/(EPOCH_SIZE*NUM_EPOCH + 1))
 
         print('wait_fraction_list: {}'.format(wait_fraction_list))
-        print('delay_list: {}'.format(new_delay_list))
+        print(colored('delay_list: {}'.format(new_delay_list),"green"))
+        print(colored('mcf_list_percent: {}'.format(mcf_list_percent),"green"))
         print('depth_list: {}'.format(depth_list))
 
         return (tp, delay, depth, mcf)
@@ -444,13 +454,15 @@ if __name__ == '__main__':
             NUM_VALIDATORS: {}
             D_REGULAR: {}
             Vote_as_block: {}
-            Immediate_vote: {}""".
+            Immediate_vote: {}
+            PROPOSAL_LOTT: {}""".
             format(NUM_EPOCH,
                    SUPER_MAJORITY,
                    NUM_VALIDATORS,
                    D_REGULAR,
                    VOTE_AS_BLOCK,
-                   IMMEDIATE_VOTE))
+                   IMMEDIATE_VOTE,
+                   PROPOSAL_LOTT))
     print('``````````````````')
 
     for fraction_disconnected in fractions:

@@ -93,14 +93,52 @@ class Validator(object):
         # At time 0: validator 0
         # At time BLOCK_PROPOSAL_TIME: validator 1
         # .. At time NUM_VALIDATORS * BLOCK_PROPOSAL_TIME: validator 0
-        if not self.immediate_vote:
+
+        if (not self.immediate_vote):
             self.vote_on_delay()
-        if self.mining_id == (time // BLOCK_PROPOSAL_TIME) % NUM_VALIDATORS and time % BLOCK_PROPOSAL_TIME == 0:
-            # One node is authorized to create a new block and broadcast it
-            new_block = Block(self.head, self.finalized_dynasties)
-            self.network.broadcast(new_block, self.id)
-            self.network.report_proposal(new_block)
-            self.on_receive(new_block, sml_stats)  # immediately "receive" the new block (no network latency)
+
+
+        #####################
+        ### REGISTRATION  ###
+        #####################
+        if (time % BLOCK_PROPOSAL_TIME != 0):
+            # there should be no winner
+            if (self.network.current_proposer != None):
+                self.network.reset_proposer()
+            # submit mining_id to candidate list if you are at head
+            if (self.head.height == (time // BLOCK_PROPOSAL_TIME)):
+                self.network.join_lottery(self.mining_id)
+
+        #####################
+        ### PROPOSAL TIME ###
+        #####################
+        else:
+            # determine if I'm the proposer
+            if (PROPOSAL_LOTT):
+
+                # if proposer not chosen, select from lottery
+                if (self.network.current_proposer is None):
+                    won_dist    = [self.network.proposer_history[c] for 
+                                   c in self.network.candidate]
+                    win_dist    = [m.exp(-x) for x in won_dist]
+                    prob_dist   = [x/sum(win_dist) for x in win_dist]
+                    self.network.get_proposer(prob_dist)
+
+                proposer_id = self.network.current_proposer
+            else:
+                proposer_id = (time % NUM_VALIDATORS)
+
+            # propose if you are the lottery winner 
+            if (self.mining_id == proposer_id):
+                # update proposer history
+                self.network.proposer_history[self.mining_id] += 1
+                
+                # One node is authorized to broadcast a new block
+                new_block = Block(self.head, self.finalized_dynasties)
+                self.network.broadcast(new_block, self.id)
+                self.network.report_proposal(new_block)
+                # immediately "receive" the new block (no network latency)
+                self.on_receive(new_block, sml_stats)  
 
 class VoteValidator(Validator):
     """Add the vote messages + slashing conditions capability"""
@@ -545,10 +583,13 @@ class VoteValidator(Validator):
             #         we normalize based on first vote @ t=1
             timestamps = self.vote_timestamps[src.hash][targethash] 
             #weighted_timestamps = list(map(lambda x : m.log(x-self.first_vote_timestamp[src.hash]+1), timestamps))
-            # case 3: weigh based on bounded exponential between 1 to e
-            norm_timestamps = list(map(lambda x: x-self.first_vote_timestamp[src.hash]+1, timestamps))
+            # case 3: weigh based on a decaying exponential
+            #         the more recent the vote, the higher the weight
+            #         d is to give it a wider range
+            d = 2000
             k = self.last_vote_timestamp[src.hash]
-            weighted_timestamps = [m.exp(x/k) for x in norm_timestamps]
+            norm_timestamps = [k-x for x in timestamps]
+            weighted_timestamps = [m.exp(-x/d) for x in norm_timestamps]
             try:
                 weight = sum(weighted_timestamps)
             except OverflowError as err:
