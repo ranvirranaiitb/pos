@@ -14,7 +14,7 @@ def sigmoid(x):
 class Validator(object):
     """Abstract class for validators."""
 
-    def __init__(self, network,latency, wait_fraction, id, immediate_vote):
+    def __init__(self, network,latency, wait_fraction, id, immediate_vote, random_proposal_wait):
         # processed blocks
         self.processed = {ROOT.hash: ROOT}
         # Messages that are not processed yet, and require another message
@@ -49,6 +49,13 @@ class Validator(object):
         self.voting_delay_average = latency*wait_fraction
         self.mining_id = id             #Mining id, shuffeled after every proposal
         self.immediate_vote = immediate_vote
+        self.random_proposal_wait = random_proposal_wait
+        self.block_proposal_permission = False
+        self.block_proposal_wait = None
+        self.latest_received_block_time = 0
+        self.pseudo_head = ROOT
+        self.bpm_check1 = 0
+        self.bpm_check2 = 0
 
     # If we processed an object but did not receive some dependencies
     # needed to process it, save it to be processed later
@@ -91,6 +98,64 @@ class Validator(object):
             desc = self.get_checkpoint_parent(desc)
         return False
 
+    def make_tree(self,block_dict):
+        block_tree = {}
+        for block_hash in block_dict:
+            if block_dict[block_hash][0].height not in block_tree:
+                block_tree[block_dict[block_hash][0].height] = {}
+            block_tree[block_dict[block_hash][0].height][block_hash] = block_dict[block_hash]
+        
+        return block_tree
+
+    def score_blocks(self,block_dict):
+        for block_hash in block_dict:
+            prev_hash = block_dict[block_hash][0].prev_hash
+            if prev_hash in block_dict:
+                temp_block = block_dict[block_dict[block_hash][0].prev_hash]
+                score_counter = block_dict[block_hash][1]
+                while temp_block[0].height > self.highest_justified_checkpoint.height:
+                    score_counter += temp_block[1]
+                    prev_hash = temp_block[0].prev_hash
+                    if prev_hash not in block_dict:
+                        score_counter = 0
+                        break
+                    else:
+                        temp_block = block_dict[prev_hash]
+                if not temp_block[0].hash == self.highest_justified_checkpoint.hash:
+                    score_counter = 0
+            else:
+                score_counter = 0
+            block_dict[block_hash].append(score_counter)
+
+        return block_dict
+
+    def return_polled_pseudo_head(self,block_dict):
+        temp_score = 0
+        temp_hash = None
+        for block_hash in block_dict:
+            if block_dict[block_hash][2] > temp_score:
+                temp_score = block_dict[block_hash][2]
+                temp_hash = block_hash
+        if temp_score == 0:
+            self.bpm_check1 += 1
+            return self.head
+        else:
+            self.bpm_check2 += 1
+            return block_dict[temp_hash][0]
+
+
+
+
+    def join_block_dict(self,block_dict_1, block_dict_2):
+        temp_dict = block_dict_1
+        for key in block_dict_2:
+            if key not in temp_dict:
+                temp_dict[key] = block_dict_2[key]
+            else:
+                temp_dict[key][1] += block_dict_2[key][1]
+
+        return temp_dict 
+
     # Called every round
     def tick(self, time, sml_stats = {}):
         # At time 0: validator 0
@@ -98,18 +163,84 @@ class Validator(object):
         # .. At time NUM_VALIDATORS * BLOCK_PROPOSAL_TIME: validator 0
         if not self.immediate_vote:
             self.vote_on_delay()
+
+        '''    
+        if self.mining_id == (time // BLOCK_PROPOSAL_TIME) % NUM_VALIDATORS :
+            if not self.block_proposal_permission :
+                self. block_proposal_wait = int(np.random.uniform(0,BLOCK_PROPOSAL_TIME*self.random_proposal_wait))
+                self.block_proposal_permission = True
+        '''
+        '''
+        self.block_proposal_wait = 0
+        if (self.mining_id+1) == (time // BLOCK_PROPOSAL_TIME) % NUM_VALIDATORS :
+            self.block_proposal_permission = True
+
+        if self.mining_id == (time // BLOCK_PROPOSAL_TIME) % NUM_VALIDATORS:
+            time_diff = time - self.block_proposal_wait - self.latest_received_block_time
+            if time%BLOCK_PROPOSAL_TIME > BLOCK_PROPOSAL_TIME-2 or time_diff ==1 :
+                if self.block_proposal_permission:            
+                    # One node is authorized to create a new block and broadcast it
+                    new_block = Block(self.head, self.finalized_dynasties)
+                    self.network.broadcast(new_block, self.id)
+                    self.network.report_proposal(new_block)
+                    self.on_receive(new_block, sml_stats)  # immediately "receive" the new block (no network latency)
+                    self.block_proposal_permission = False
+
+        '''
+
+
         if self.mining_id == (time // BLOCK_PROPOSAL_TIME) % NUM_VALIDATORS and time % BLOCK_PROPOSAL_TIME == 0:
             # One node is authorized to create a new block and broadcast it
-            new_block = Block(self.head, self.finalized_dynasties)
+            '''
+            temp_head = self.pseudo_head
+            temp_head_height = self.pseudo_head.height
+            p_communication = 10.0/NUM_VALIDATORS
+            for node in self.network.nodes:
+                if np.random.binomial(1,p_communication):
+                    if node.pseudo_head.height > temp_head_height:
+                        temp_head_height = node.pseudo_head.height
+                        temp_head = node.pseudo_head
+            
+            '''
+            '''
+            temp_head = self.head
+            temp_head_height = self.head.height
+            p_communication = 10.0/NUM_VALIDATORS
+            for node in self.network.nodes:
+                if np.random.binomial(1,p_communication):
+                    if node.head.height > temp_head_height:
+                        temp_head_height = node.head.height
+                        temp_head = node.head
+            '''
+            
+            if self.bpm ==1:
+                min_height = self.highest_justified_checkpoint.height
+                block_dict = self.send_top_tree(min_height)
+                p_communication = 4.0/NUM_VALIDATORS
+                for node in self.network.nodes:
+                    if np.random.binomial(1,p_communication):
+                        temp_dict = node.send_top_tree(min_height)
+                        block_dict = self.join_block_dict(block_dict, temp_dict)
+
+                block_dict = self.score_blocks(block_dict)
+                temp_head = self.return_polled_pseudo_head(block_dict)
+                #block_tree = self.make_tree(block_dict)
+
+            if self.bpm ==0:
+                temp_head = self.head
+
+
+            #print(temp_head_height)
+            new_block = Block(temp_head, self.finalized_dynasties)
             self.network.broadcast(new_block, self.id)
             self.network.report_proposal(new_block)
-            self.on_receive(new_block, sml_stats)  # immediately "receive" the new block (no network latency)
+            self.on_receive(new_block, sml_stats)  
 
 class VoteValidator(Validator):
     """Add the vote messages + slashing conditions capability"""
 
-    def __init__(self, network, latency, wait_fraction, id, vote_as_block, immediate_vote, wait_for_majority, vote_confidence, lottery_fraction):
-        super(VoteValidator, self).__init__(network, latency,wait_fraction, id,immediate_vote)
+    def __init__(self, network, latency, wait_fraction, id, vote_as_block, immediate_vote, wait_for_majority, vote_confidence, lottery_fraction, random_proposal_wait, bpm):
+        super(VoteValidator, self).__init__(network, latency,wait_fraction, id,immediate_vote, random_proposal_wait)
         # the head is the latest block processed descendant of the highest
         # justified checkpoint
         self.head = ROOT
@@ -145,6 +276,9 @@ class VoteValidator(Validator):
         self.vote_confidence = vote_confidence
         self.lottery_fraction = lottery_fraction
         self.vote_score = {}
+        self.num_votes = 0
+        self.vote_target_count = {}
+        self.bpm = bpm
         
 
     # TODO: we could write function is_justified only based on self.processed and self.votes
@@ -310,11 +444,12 @@ class VoteValidator(Validator):
             # print('Validator %d: now in epoch %d' % (self.id, target_block.epoch))
             # Increment our epoch
             if target_block.epoch>source_block.epoch:
-                self.current_epoch = target_block.epoch
+                #self.current_epoch = target_block.epoch
 
                 # if the target_block is a descendent of the source_block, send
                 # a vote
                 if self.is_ancestor(source_block, target_block):
+                    self.current_epoch = target_block.epoch
                     # print('Validator %d: Voting %d for epoch %d with epoch source %d' %
                           # (self.id, target_block.hash, target_block.epoch,
                            # source_block.epoch))
@@ -327,6 +462,7 @@ class VoteValidator(Validator):
                     self.network.broadcast(vote, self.id)
                     self.network.report_vote(vote)
                     #print('Debug_vote_1')
+                    self.num_votes+=1
 
                     del self.time_to_vote[block.height]
                     del self.vote_permission[block.height]
@@ -461,7 +597,9 @@ class VoteValidator(Validator):
             if vote.source not in self.vote_score:
                 self.vote_score[vote.source] = {}
             self.vote_score[vote.source][vote.target] = self.vote_score[
-                vote.source].get(vote.target, 0) + vote.confidence           
+                vote.source].get(vote.target, 0) + vote.confidence   
+
+            self.vote_target_count[vote.target] = self.vote_target_count.get(vote.target,0) + 1        
 
             
 
@@ -627,14 +765,27 @@ class VoteValidator(Validator):
         else:
             return True
 
+    def send_top_tree(self,min_height):
+        return_dict = {}
+        for block_hash in self.blocks_received:
+            if self.network.processed[block_hash].height>=min_height:
+                temp = self.vote_target_count.get(block_hash,1)
+                return_dict[block_hash] = [self.network.processed[block_hash],temp]
+        return return_dict
+
+
     # Called on processing any object
     def on_receive(self, obj, sml_stats={}):
         if obj.hash in self.processed:
             return False
         if isinstance(obj, Block):
             val = self.check_block_validity(obj)
+            if obj.height > self.pseudo_head.height:
+                #print(obj.height)
+                self.pseudo_head = obj
             if val:
                 o = self.accept_block(obj)
+                self.latest_received_block_time = self.network.time ##DECISION: WHERE TO PLACE THIS, this location is worth scrutinys
                 #print('Block on receive called')
         elif isinstance(obj, Vote):
             val = self.check_vote_validity(obj)

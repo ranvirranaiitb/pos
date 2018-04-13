@@ -213,7 +213,8 @@ def count_forks(validator):
 def print_metrics_latency (G, num_tries, latencies,
                           wait_fractions, vote_as_block, immediate_vote, 
                           wait_for_majority, vote_confidence, 
-                          lottery_fraction, validator_set=VALIDATOR_IDS):
+                          lottery_fraction, random_proposal_wait_1,bpm,
+                          validator_set=VALIDATOR_IDS):
     # metrics for analysis
     tp      = []
     delay   = []
@@ -232,205 +233,228 @@ def print_metrics_latency (G, num_tries, latencies,
 
         for wf in wait_fractions:
 
-            print('wait_fraction: {}'.format(wf))
+            for rpw in random_proposal_wait_1:
 
-            sum_type_1_vote         = 0
-            sum_type_2_vote         = 0
-            mining_ids              = [i for i in range(NUM_VALIDATORS)]
-            jfsum                   = 0.0
-            squarejfsum             = 0.0
-            ffsum                   = 0.0
-            squareffsum             = 0.0
-            jffsum                  = 0.0
-            squarejffsum            = 0.0
-            mcsum                   = 0.0
-            squaremcsum             = 0.0
-            busum                   = 0.0
-            squarebusum             = 0.0
-            delaysum                = 0.0
-            squaredelaysum          = 0.0
-            throughputsum           = 0.0
-            squarethroughputsum     = 0.0
-            total_finalized         = 0.0
-            num_finalized_tries     = 0.0
-            finalization_achieved   = True
-            Equartiles              = [0.0,0.0,0.0,0.0]
-            E2quartiles             = [0.0,0.0,0.0,0.0]
-            stdquartiles            = [0.0,0.0,0.0,0.0]
-            len_valid_sums          = [0.0,0.0,0.0,0.0]
-            Etiming                 = np.zeros((8))
-            timing_count            = np.zeros((8))
-            sml_stats               = {}
-            depth_finalized         = 0
-            num_depth_finalized     = 0
-            delay_array = np.array([])
 
-            for i in range(num_tries):
-                network = Network(G.adj, latency)
-                validators = [VoteValidator(network,latency,wf, i,vote_as_block, immediate_vote, wait_for_majority, vote_confidence, lottery_fraction) for i in validator_set]
+                print('wait_fraction: {}'.format(wf))
+                print('random_proposal_wait_1: {}'.format(rpw))
 
-                for t in tqdm(range(BLOCK_PROPOSAL_TIME * EPOCH_SIZE * NUM_EPOCH)):
-                    network.tick(sml_stats)
-                    # The code below does random shuffling of mining order
-                    if t%BLOCK_PROPOSAL_TIME*NUM_VALIDATORS ==0:
-                        random.shuffle(mining_ids)
-                        for val in validators:
-                            val.mining_id = mining_ids[val.id]
+                sum_type_1_vote         = 0
+                sum_type_2_vote         = 0
+                mining_ids              = [i for i in range(NUM_VALIDATORS)]
+                jfsum                   = 0.0
+                squarejfsum             = 0.0
+                ffsum                   = 0.0
+                squareffsum             = 0.0
+                jffsum                  = 0.0
+                squarejffsum            = 0.0
+                mcsum                   = 0.0
+                squaremcsum             = 0.0
+                busum                   = 0.0
+                squarebusum             = 0.0
+                delaysum                = 0.0
+                squaredelaysum          = 0.0
+                throughputsum           = 0.0
+                squarethroughputsum     = 0.0
+                total_finalized         = 0.0
+                num_finalized_tries     = 0.0
+                finalization_achieved   = True
+                Equartiles              = [0.0,0.0,0.0,0.0]
+                E2quartiles             = [0.0,0.0,0.0,0.0]
+                stdquartiles            = [0.0,0.0,0.0,0.0]
+                len_valid_sums          = [0.0,0.0,0.0,0.0]
+                Etiming                 = np.zeros((8))
+                timing_count            = np.zeros((8))
+                sml_stats               = {}
+                depth_finalized         = 0
+                num_depth_finalized     = 0
+                delay_array = np.array([])
+                num_votes = 0
+                head_height =0
+                pseudo_head_height = 0
+                bpm_check1 = []
+                bpm_check2 = []
 
-                    # if t % (BLOCK_PROPOSAL_TIME * EPOCH_SIZE) == 0:
-                    #     filename = os.path.join(LOG_DIR, 'plot_{:03d}.png'.format(t))
-                    #     plot_node_blockchains(validators, filename)
+                for i in range(num_tries):
+                    network = Network(G.adj, latency)
+                    validators = [VoteValidator(network,latency,wf, i,vote_as_block, immediate_vote, wait_for_majority, vote_confidence, lottery_fraction, rpw, bpm) for i in validator_set]
 
-                for val in validators:
-                    jf, ff, jff = fraction_justified_and_finalized(val)
-                    jfsum += jf
-                    squarejfsum += jf**2
-                    ffsum += ff
-                    squareffsum += ff**2
-                    jffsum += jff
-                    squarejffsum += jff**2
-                    mcsum += main_chain_size(val)
-                    squaremcsum += main_chain_size(val)**2
-                    busum += blocks_under_highest_justified(val)
-                    squarebusum += blocks_under_highest_justified(val)**2
-                    temp_depth_finalized = val.depth_finalized
-                    temp_num_depth_finalized = val.num_depth_finalized
-                    num_depth_finalized += temp_num_depth_finalized
-                    depth_finalized += temp_depth_finalized
-                    sum_type_1_vote += val.type_1_vote
-                    sum_type_2_vote += val.type_2_vote
+                    for t in tqdm(range(BLOCK_PROPOSAL_TIME * EPOCH_SIZE * NUM_EPOCH)):
+                        network.tick(sml_stats)
+                        # The code below does random shuffling of mining order
+                        if t%BLOCK_PROPOSAL_TIME*NUM_VALIDATORS ==0:
+                            random.shuffle(mining_ids)
+                            for val in validators:
+                                val.mining_id = mining_ids[val.id]
 
-                    #fc = count_forks(val)
-                    #for l in fc.keys():
-                        #fcsum[l] = fcsum.get(l, 0) + fc[l]
+                        # if t % (BLOCK_PROPOSAL_TIME * EPOCH_SIZE) == 0:
+                        #     filename = os.path.join(LOG_DIR, 'plot_{:03d}.png'.format(t))
+                        #     plot_node_blockchains(validators, filename)
 
-                Edelay,E2delay,throughput,num_finalized, temp_delay_array = delay_throughput(network)
-                delay_array = np.append(delay_array,temp_delay_array)
-                delaysum += Edelay*num_finalized
-                squaredelaysum += E2delay*num_finalized
-                if num_finalized>0:
-                    throughputsum +=throughput
-                    num_finalized_tries = num_finalized_tries + 1
-                    squarethroughputsum += throughput**2
-                total_finalized += num_finalized
+                    for val in validators:
+                        jf, ff, jff = fraction_justified_and_finalized(val)
+                        jfsum += jf
+                        squarejfsum += jf**2
+                        ffsum += ff
+                        squareffsum += ff**2
+                        jffsum += jff
+                        squarejffsum += jff**2
+                        mcsum += main_chain_size(val)
+                        squaremcsum += main_chain_size(val)**2
+                        busum += blocks_under_highest_justified(val)
+                        squarebusum += blocks_under_highest_justified(val)**2
+                        temp_depth_finalized = val.depth_finalized
+                        temp_num_depth_finalized = val.num_depth_finalized
+                        num_depth_finalized += temp_num_depth_finalized
+                        depth_finalized += temp_depth_finalized
+                        sum_type_1_vote += val.type_1_vote
+                        sum_type_2_vote += val.type_2_vote
+                        num_votes += val.num_votes
+                        head_height += val.head.height
+                        pseudo_head_height += val.pseudo_head.height
+                        bpm_check1.append(val.bpm_check1)
+                        bpm_check2.append(val.bpm_check2)
+                        #print(val.head.height)
+                        #fc = count_forks(val)
+                        #for l in fc.keys():
+                            #fcsum[l] = fcsum.get(l, 0) + fc[l]
 
-                tempEquartiles,tempE2quartiles,templen_valid_sums = finalization_quartiles(network)
-                for i in range(4):
-                    if templen_valid_sums[i]>0 :
-                        Equartiles[i] += tempEquartiles[i]
-                        E2quartiles[i] += tempE2quartiles[i]
-                        len_valid_sums[i] += templen_valid_sums[i]
+                    Edelay,E2delay,throughput,num_finalized, temp_delay_array = delay_throughput(network)
+                    delay_array = np.append(delay_array,temp_delay_array)
+                    delaysum += Edelay*num_finalized
+                    squaredelaysum += E2delay*num_finalized
+                    if num_finalized>0:
+                        throughputsum +=throughput
+                        num_finalized_tries = num_finalized_tries + 1
+                        squarethroughputsum += throughput**2
+                    total_finalized += num_finalized
 
-                temp_timing,temp_timing_count = timing_chain(network)
-                Etiming += temp_timing
-                timing_count += temp_timing_count
+                    tempEquartiles,tempE2quartiles,templen_valid_sums = finalization_quartiles(network)
+                    for i in range(4):
+                        if templen_valid_sums[i]>0 :
+                            Equartiles[i] += tempEquartiles[i]
+                            E2quartiles[i] += tempE2quartiles[i]
+                            len_valid_sums[i] += templen_valid_sums[i]
 
-            sd_delay = 0
-            if total_finalized > 0 :
-                Edelay = delaysum/total_finalized
-                E2delay = squaredelaysum/total_finalized
-                vardelay = E2delay - Edelay**2
-                sd_delay = np.sqrt(vardelay)
-                Ethroughput = throughputsum/num_finalized_tries
-                E2throughput = squarethroughputsum/num_finalized_tries
-                varthroughput = E2throughput - Ethroughput**2
-            else:
-                finalization_achieved = False
-                #print('No finalization Achieved')
+                    temp_timing,temp_timing_count = timing_chain(network)
+                    Etiming += temp_timing
+                    timing_count += temp_timing_count
 
-            for i in range(4):
-                if len_valid_sums[i]>0:
-                    Equartiles[i] = Equartiles[i]/len_valid_sums[i]
-                    E2quartiles[i] = E2quartiles[i]/len_valid_sums[i]
-                    stdquartiles[i] = E2quartiles[i] - Equartiles[i]**2
-                    stdquartiles[i] = np.sqrt(stdquartiles[i])
+                sd_delay = 0
+                if total_finalized > 0 :
+                    Edelay = delaysum/total_finalized
+                    E2delay = squaredelaysum/total_finalized
+                    vardelay = E2delay - Edelay**2
+                    sd_delay = np.sqrt(vardelay)
+                    Ethroughput = throughputsum/num_finalized_tries
+                    E2throughput = squarethroughputsum/num_finalized_tries
+                    varthroughput = E2throughput - Ethroughput**2
                 else:
-                    Equartiles[i] = None
-                    stdquartiles[i] = None
+                    finalization_achieved = False
+                    #print('No finalization Achieved')
+
+                for i in range(4):
+                    if len_valid_sums[i]>0:
+                        Equartiles[i] = Equartiles[i]/len_valid_sums[i]
+                        E2quartiles[i] = E2quartiles[i]/len_valid_sums[i]
+                        stdquartiles[i] = E2quartiles[i] - Equartiles[i]**2
+                        stdquartiles[i] = np.sqrt(stdquartiles[i])
+                    else:
+                        Equartiles[i] = None
+                        stdquartiles[i] = None
 
 
-            Ejf = jfsum/len(validators)
-            E2jf = squarejfsum/len(validators)
-            Ejff = jffsum/len(validators)
-            E2jff = squarejffsum/len(validators)
-            Eff = ffsum/len(validators)
-            E2ff = squareffsum/len(validators)
-            Emc = mcsum/len(validators)
-            E2mc = squaremcsum/len(validators)
-            Ebu = busum/len(validators)
-            E2bu = squarebusum/len(validators)
-            varjf = E2jf - Ejf**2
-            varjff = E2jff - Ejff**2
-            varff = E2ff - Eff**2
-            varmc = E2mc - Emc**2
-            varbu = E2bu - Ebu**2
+                Ejf = jfsum/len(validators)
+                E2jf = squarejfsum/len(validators)
+                Ejff = jffsum/len(validators)
+                E2jff = squarejffsum/len(validators)
+                Eff = ffsum/len(validators)
+                E2ff = squareffsum/len(validators)
+                Emc = mcsum/len(validators)
+                E2mc = squaremcsum/len(validators)
+                Ebu = busum/len(validators)
+                E2bu = squarebusum/len(validators)
+                varjf = E2jf - Ejf**2
+                varjff = E2jff - Ejff**2
+                varff = E2ff - Eff**2
+                varmc = E2mc - Emc**2
+                varbu = E2bu - Ebu**2
+                num_votes = num_votes/NUM_VALIDATORS
+                #print(head_height)
+                head_height = head_height/NUM_VALIDATORS
+                #print(head_height)
+                pseudo_head_height = pseudo_head_height/NUM_VALIDATORS
+                depth_finalized = depth_finalized/num_depth_finalized
 
-            depth_finalized = depth_finalized/num_depth_finalized
+                Etiming = Etiming/timing_count
 
-            Etiming = Etiming/timing_count
+                tp += [Ethroughput]
+                delay += [Edelay/(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))]
+                depth += [depth_finalized]
+                mcf += [Emc/(EPOCH_SIZE*NUM_EPOCH + 1)]
 
-            tp += [Ethroughput]
-            delay += [Edelay/(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))]
-            depth += [depth_finalized]
-            mcf += [Emc/(EPOCH_SIZE*NUM_EPOCH + 1)]
+                delay_array = delay_array/(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))
 
-            delay_array = delay_array/(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))
+                delay_quartiles = [np.percentile(delay_array,25),np.percentile(delay_array,50),np.percentile(delay_array,75),np.percentile(delay_array,100)]
 
-            delay_quartiles = [np.percentile(delay_array,25),np.percentile(delay_array,50),np.percentile(delay_array,75),np.percentile(delay_array,100)]
+                print('=== Statistics ===')
+                print('Latency: {}'
+                        .format(latency))
+                print('Timing: {}'
+                        .format(Etiming))
+                print('Bar_graph: {}'
+                        .format([Etiming[1], (Etiming[2]-Etiming[1]),
+                                (Etiming[4]-Etiming[2]),(Etiming[5]-Etiming[4]),
+                                (Etiming[6]-Etiming[5]),(Etiming[7]-Etiming[6])]))
+                print('Justified in forks: {}'
+                        .format([Ejff,np.sqrt(varjff)]))
+                print('Main chain size (root included): {}'
+                        .format([Emc,np.sqrt(varmc)]))
+                print('Probability of death: {}'
+                        .format(1.0 - Emc/(EPOCH_SIZE*NUM_EPOCH + 1)))  # include ROOT
+                print('Blocks under main justified: {}'
+                        .format([Ebu,varbu]))
+                print('finalization_quartiles:{}'
+                        .format([Equartiles,stdquartiles]))
+                print('Main chain fraction:{}'
+                        .format([Emc/(EPOCH_SIZE*NUM_EPOCH + 1),        # include ROOT
+                                np.sqrt(varmc)/EPOCH_SIZE/NUM_EPOCH ]))
+                print('type_1_vote: {}'.format(sum_type_1_vote))
+                print('type_2_vote: {}'.format(sum_type_2_vote))
+                print('num_votes: {}'.format(num_votes))
+                print('head_height:{}'.format(head_height))
+                print('pseudo_head_height:{}'.format(pseudo_head_height))
+                print('bpm_check1:{}'.format(sum(bpm_check1)))
+                print('bpm_check2:{}'.format(sum(bpm_check2)))
+                
+                if finalization_achieved :
+                    print('---new, incld. dead blocks---')
+                    print('Delay:{}'
+                            .format(Edelay/(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))))
+                    print('Delay:{}'.format(np.mean(delay_array)))
+                    print('delay_quartiles: {}'.format(delay_quartiles))
+                    print('sd_delay:{}'.format(sd_delay/(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))))
+                    print('Throughput:{}'
+                            .format(Ethroughput))
+                    print('depth:{}'
+                            .format(depth_finalized))
+                    print('---old, ignoring dead blocks---')
+                    print('Delay:{}'
+                            .format([Edelay,vardelay]))
+                    print('Throughput:{}'
+                            .format([Ethroughput,varthroughput]))
+                else:
+                    print('No finalization achieved')
+                print('supermajority link stats: {}'
+                        .format(dict(Counter(sml_stats.values()))))
+                print('=== END === ')
 
-            print('=== Statistics ===')
-            print('Latency: {}'
-                    .format(latency))
-            print('Timing: {}'
-                    .format(Etiming))
-            print('Bar_graph: {}'
-                    .format([Etiming[1], (Etiming[2]-Etiming[1]),
-                            (Etiming[4]-Etiming[2]),(Etiming[5]-Etiming[4]),
-                            (Etiming[6]-Etiming[5]),(Etiming[7]-Etiming[6])]))
-            print('Justified in forks: {}'
-                    .format([Ejff,np.sqrt(varjff)]))
-            print('Main chain size (root included): {}'
-                    .format([Emc,np.sqrt(varmc)]))
-            print('Probability of death: {}'
-                    .format(1.0 - Emc/(EPOCH_SIZE*NUM_EPOCH + 1)))  # include ROOT
-            print('Blocks under main justified: {}'
-                    .format([Ebu,varbu]))
-            print('finalization_quartiles:{}'
-                    .format([Equartiles,stdquartiles]))
-            print('Main chain fraction:{}'
-                    .format([Emc/(EPOCH_SIZE*NUM_EPOCH + 1),        # include ROOT
-                            np.sqrt(varmc)/EPOCH_SIZE/NUM_EPOCH ]))
-            print('type_1_vote: {}'.format(sum_type_1_vote))
-            print('type_2_vote: {}'.format(sum_type_2_vote))
-            
-            if finalization_achieved :
-                print('---new, incld. dead blocks---')
-                print('Delay:{}'
-                        .format(Edelay/(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))))
-                print('Delay:{}'.format(np.mean(delay_array)))
-                print('delay_quartiles: {}'.format(delay_quartiles))
-                print('sd_delay:{}'.format(sd_delay/(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))))
-                print('Throughput:{}'
-                        .format(Ethroughput))
-                print('depth:{}'
-                        .format(depth_finalized))
-                print('---old, ignoring dead blocks---')
-                print('Delay:{}'
-                        .format([Edelay,vardelay]))
-                print('Throughput:{}'
-                        .format([Ethroughput,varthroughput]))
-            else:
-                print('No finalization achieved')
-            print('supermajority link stats: {}'
-                    .format(dict(Counter(sml_stats.values()))))
-            print('=== END === ')
-
-            wait_fraction_list.append(wf)
-            new_delay_list.append(Edelay/(Emc/(EPOCH_SIZE*NUM_EPOCH + 1)))
-            old_delay_list.append(Edelay)
-            tp_list.append(Ethroughput)
-            depth_list.append(depth_finalized)
-            MCF_list.append(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))
+                wait_fraction_list.append(wf)
+                new_delay_list.append(Edelay/(Emc/(EPOCH_SIZE*NUM_EPOCH + 1)))
+                old_delay_list.append(Edelay)
+                tp_list.append(Ethroughput)
+                depth_list.append(depth_finalized)
+                MCF_list.append(Emc/(EPOCH_SIZE*NUM_EPOCH + 1))
 
 
 
@@ -458,6 +482,9 @@ if __name__ == '__main__':
     wait_for_majority = False
     vote_confidence = False
     lottery_fraction = 0.0
+    random_proposal_wait_1 = [ 0.0]
+    bpm = 0
+
 
     print('``````````````````')
     print("""running test
@@ -470,8 +497,11 @@ if __name__ == '__main__':
             Immediate_vote: {}
             Wait_for_majority: {}
             Vote_confidence: {}
-            lottery fraction; {}
-            EPOCH_SIZE: {}""".
+            lottery fraction: {}
+            EPOCH_SIZE: {}
+            random_proposal_wait_1: {}
+            block_proposal_mechanism: {}
+            BLOCK_PROPOSAL_TIME: {} """.
             format(NUM_EPOCH,
                    SUPER_MAJORITY,
                    NUM_VALIDATORS,
@@ -481,7 +511,10 @@ if __name__ == '__main__':
                    wait_for_majority,
                    vote_confidence,
                    lottery_fraction,
-                   EPOCH_SIZE))
+                   EPOCH_SIZE,
+                   random_proposal_wait_1,
+                   bpm,
+                   BLOCK_PROPOSAL_TIME))
     print('``````````````````')
 
     for fraction_disconnected in fractions:
@@ -493,7 +526,7 @@ if __name__ == '__main__':
         num_tries = 1
         #latencies = [i for i in range(10, 300, 20)] + [500, 750, 1000]
         latencies = [250]
-        wait_fractions =  [0.1]
+        wait_fractions =  [0.0]
         
 
         # Graph
@@ -507,6 +540,8 @@ if __name__ == '__main__':
                                                         wait_for_majority,
                                                         vote_confidence,
                                                         lottery_fraction,
+                                                        random_proposal_wait_1,
+                                                        bpm,
                                                         validator_set)
 
         # save data to test.xlsx

@@ -34,6 +34,8 @@ def generate_latencies (avg_latency, adj_list, src):
     check_count = 0
     recent_infected = src
 
+    
+
     while len(time_infected)<NUM_VALIDATORS:
         check_count += 1
         #print('recent_infected: {}'.format(recent_infected))
